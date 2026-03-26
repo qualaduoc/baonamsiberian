@@ -1,19 +1,38 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// Lazy init để tránh crash khi build-time (Vercel chưa inject env vars)
+let _supabase: SupabaseClient | null = null;
 
-// Instance dành cho người dùng vãng lai (Public read) - Dùng an toàn ở cả Server/Client
-// Khi build trên Vercel, env chưa sẵn sàng → dùng placeholder để tránh crash
-export const supabase: SupabaseClient = supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : createClient('https://placeholder.supabase.co', 'placeholder-key');
-
-// Instance dành cho các tác vụ thay đổi dữ liệu yêu cầu quyền Admin, chạy TẠI SERVER ONLY
-export const getServiceSupabase = () => {
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey || !supabaseUrl) {
-    throw new Error('Thiếu SUPABASE_SERVICE_ROLE_KEY hoặc SUPABASE_URL trong Server runtime.');
+/** Instance dành cho Public read - dùng anon key */
+export const getSupabase = (): SupabaseClient => {
+  if (!_supabase) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) {
+      // Build-time fallback: trả về dummy client, sẽ fail gracefully khi query
+      return createClient('https://placeholder.supabase.co', 'ey-placeholder');
+    }
+    _supabase = createClient(url, key);
   }
-  return createClient(supabaseUrl, serviceKey);
+  return _supabase;
+};
+
+// Backward-compatible export cho code cũ dùng `supabase` trực tiếp
+// Dùng Proxy để lazy init khi truy cập property
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    return (getSupabase() as any)[prop];
+  },
+});
+
+/** Instance dành cho Admin operations - chạy TẠI SERVER ONLY */
+export const getServiceSupabase = (): SupabaseClient => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) {
+    throw new Error('Thiếu SUPABASE env vars trong Server runtime.');
+  }
+  return createClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 };

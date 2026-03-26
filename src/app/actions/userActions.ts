@@ -4,10 +4,10 @@ import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-
 function getAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!supabaseUrl || !serviceKey) throw new Error("Thiếu Supabase env vars.");
   return createClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
