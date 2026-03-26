@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getSupabase } from "./supabase";
 
 export interface FeaturedCategory {
   id: string;
@@ -18,7 +18,7 @@ const DEFAULT_CATEGORIES: FeaturedCategory[] = [
 
 export async function getFeaturedCategories(): Promise<FeaturedCategory[]> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from("site_settings")
       .select("value")
       .eq("key", "featured_categories")

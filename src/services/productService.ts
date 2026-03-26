@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getSupabase } from "./supabase";
 
 export interface Category {
   id: string;
@@ -41,7 +41,7 @@ function mapProduct(item: any): Product {
 }
 
 export const getFeaturedProducts = async (): Promise<Product[]> => {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("products")
     .select(PRODUCT_SELECT)
     .limit(8);
@@ -51,7 +51,7 @@ export const getFeaturedProducts = async (): Promise<Product[]> => {
 };
 
 export const getAllProducts = async (searchQuery?: string): Promise<Product[]> => {
-  let query = supabase.from("products").select(PRODUCT_SELECT);
+  let query = getSupabase().from("products").select(PRODUCT_SELECT);
   if (searchQuery) query = query.ilike("name", `%${searchQuery}%`);
 
   const { data, error } = await query;
@@ -60,7 +60,7 @@ export const getAllProducts = async (searchQuery?: string): Promise<Product[]> =
 };
 
 export const getProductBySlug = async (slug: string): Promise<Product | null> => {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("products")
     .select(PRODUCT_SELECT)
     .eq("slug", slug)

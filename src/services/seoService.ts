@@ -1,4 +1,4 @@
-import { supabase, getServiceSupabase } from "@/services/supabase";
+import { getSupabase, getServiceSupabase } from "@/services/supabase";
 
 export interface SeoSettings {
   site_title: string;
@@ -29,7 +29,7 @@ const DEFAULT_SEO: SeoSettings = {
 };
 
 export async function getSeoSettings(): Promise<SeoSettings> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("site_settings")
     .select("value")
     .eq("key", "seo_settings")

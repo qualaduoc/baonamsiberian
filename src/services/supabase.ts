@@ -1,32 +1,18 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Lazy init để tránh crash khi build-time (Vercel chưa inject env vars)
-let _supabase: SupabaseClient | null = null;
-
-/** Instance dành cho Public read - dùng anon key */
-export const getSupabase = (): SupabaseClient => {
-  if (!_supabase) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) {
-      // Build-time fallback: trả về dummy client, sẽ fail gracefully khi query
-      return createClient('https://placeholder.supabase.co', 'ey-placeholder');
-    }
-    _supabase = createClient(url, key);
+/** Tạo Public Supabase client - chỉ gọi khi cần, KHÔNG tạo ở module-level */
+export function getSupabase(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    console.warn('Supabase env vars chưa sẵn sàng (build-time). Trả về dummy client.');
+    return createClient('https://placeholder.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder');
   }
-  return _supabase;
-};
+  return createClient(url, key);
+}
 
-// Backward-compatible export cho code cũ dùng `supabase` trực tiếp
-// Dùng Proxy để lazy init khi truy cập property
-export const supabase = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
-    return (getSupabase() as any)[prop];
-  },
-});
-
-/** Instance dành cho Admin operations - chạy TẠI SERVER ONLY */
-export const getServiceSupabase = (): SupabaseClient => {
+/** Tạo Admin Supabase client - SERVER ONLY */
+export function getServiceSupabase(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) {
@@ -35,4 +21,4 @@ export const getServiceSupabase = (): SupabaseClient => {
   return createClient(url, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
-};
+}

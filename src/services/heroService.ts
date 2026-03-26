@@ -1,5 +1,4 @@
-import { getServiceSupabase } from "@/services/supabase";
-import { supabase } from "@/services/supabase";
+import { getServiceSupabase, getSupabase } from "@/services/supabase";
 
 export interface HeroSettings {
   badge_text: string;
@@ -29,7 +28,7 @@ const DEFAULT_HERO: HeroSettings = {
 
 // Fetch Hero Settings (Public - dùng anon key)
 export async function getHeroSettings(): Promise<HeroSettings> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("site_settings")
     .select("value")
     .eq("key", "hero_banner")
