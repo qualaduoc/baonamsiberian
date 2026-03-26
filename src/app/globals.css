@@ -1,26 +1,116 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Material Design 3 - Green Health Palette */
+  --color-primary: #006a34;
+  --color-primary-container: #6afe9b;
+  --color-primary-dim: #005c2d;
+  --color-on-primary: #cdffd4;
+  --color-on-primary-container: #005f2e;
+
+  --color-secondary: #216840;
+  --color-secondary-container: #abf3bf;
+  --color-on-secondary-container: #145e37;
+
+  --color-tertiary: #6c5a00;
+  --color-tertiary-container: #ffd709;
+
+  --color-surface: #f4f7f2;
+  --color-surface-container: #e5e9e4;
+  --color-surface-container-low: #eef2ec;
+  --color-surface-container-high: #dfe4de;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-dim: #d0d6d0;
+  --color-surface-variant: #d9ded8;
+
+  --color-on-surface: #2c302d;
+  --color-on-surface-variant: #585c59;
+  --color-outline: #747874;
+  --color-outline-variant: #aaaeaa;
+
+  --color-error: #b02500;
+  --color-error-container: #f95630;
+
+  --color-cta: #006a34;
+  --color-text: #2c302d;
+  --color-background: #f4f7f2;
+
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui;
+  --font-heading: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.08);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-on-surface);
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .glossy-gradient {
+    background: linear-gradient(135deg, #006a34 0%, #00a852 50%, #6afe9b 100%);
+  }
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .btn-primary {
+    background: var(--color-primary);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 9999px;
+    font-weight: 700;
+    transition: all 200ms ease;
+    cursor: pointer;
+  }
+  .btn-primary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--color-primary);
+    border: 1px solid var(--color-outline-variant);
+    padding: 12px 28px;
+    border-radius: 9999px;
+    font-weight: 700;
+    transition: all 200ms ease;
+    cursor: pointer;
+  }
+  .btn-secondary:hover {
+    background: rgba(0, 106, 52, 0.05);
+  }
+  .card {
+    background: var(--color-surface-container-lowest);
+    border-radius: 1rem;
+    padding: 24px;
+    transition: all 300ms ease;
+    cursor: pointer;
+  }
+  .card:hover {
+    transform: translateY(-8px);
+  }
+  .input {
+    padding: 12px 16px;
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 0.75rem;
+    font-size: 16px;
+    transition: all 200ms ease;
+    background: var(--color-surface-container-lowest);
+  }
+  .input:focus {
+    border-color: var(--color-primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 106, 52, 0.15);
+  }
 }
