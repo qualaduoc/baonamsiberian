@@ -1,13 +1,11 @@
 import { getDashboardStats } from "@/services/adminService";
 import { TrendingUp, Clock, CheckCircle2, XCircle, DollarSign, ShoppingCart, CalendarDays } from "lucide-react";
 import RevenueChart from "@/components/admin/RevenueChart";
-import FeaturedCategoriesManager from "@/components/admin/FeaturedCategoriesManager";
-import { getFeaturedCategories } from "@/services/featuredCategoryService";
 
 export const revalidate = 30;
 
 export default async function AdminDashboardPage() {
-  const [stats, featuredCats] = await Promise.all([getDashboardStats(), getFeaturedCategories()]);
+  const stats = await getDashboardStats();
   const fmtVND = (n: number) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n);
 
   return (
@@ -68,8 +66,6 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Danh Mục Nổi Bật */}
-      <FeaturedCategoriesManager initialCategories={featuredCats} />
     </div>
   );
 }

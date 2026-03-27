@@ -245,7 +245,7 @@ export async function testTelegramAction(formData: FormData) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: chatId,
-        text: "✅ Cấu hình Telegram cho hệ thống Bảo Nam Siberian đã thành công!",
+        text: "✅ Cấu hình Telegram cho hệ thống Bảo Nam TPCN giá rẻ đã thành công!",
       }),
     });
     if (!res.ok) {

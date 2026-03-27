@@ -1,19 +1,22 @@
 import HeroEditor from "@/components/admin/HeroEditor";
 import SeoEditor from "@/components/admin/SeoEditor";
 import TelegramEditor from "@/components/admin/TelegramEditor";
+import FeaturedCategoriesManager from "@/components/admin/FeaturedCategoriesManager";
 import SettingsTabs from "@/components/admin/SettingsTabs";
 import { getHeroSettings } from "@/services/heroService";
 import { getSeoSettings } from "@/services/seoService";
 import { getTelegramSettings } from "@/services/telegramService";
+import { getFeaturedCategories } from "@/services/featuredCategoryService";
 import { updateSeoAction } from "@/app/actions/adminActions";
 
 export const revalidate = 0;
 
 export default async function AdminSettingsPage() {
-  const [hero, seo, telegram] = await Promise.all([
+  const [hero, seo, telegram, featuredCats] = await Promise.all([
     getHeroSettings(), 
     getSeoSettings(),
-    getTelegramSettings()
+    getTelegramSettings(),
+    getFeaturedCategories()
   ]);
 
   return (
@@ -25,6 +28,7 @@ export default async function AdminSettingsPage() {
         heroContent={<HeroEditor hero={hero} />}
         seoContent={<SeoEditor seo={seo} updateAction={updateSeoAction} />}
         telegramContent={<TelegramEditor telegram={telegram} />}
+        categoriesContent={<FeaturedCategoriesManager initialCategories={featuredCats} />}
       />
     </div>
   );
