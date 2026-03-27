@@ -2,18 +2,24 @@
 
 import Link from "next/link";
 import { useHydratedCart } from "@/features/cart/useHydratedCart";
-import { Search, ShoppingCart, UserCircle2, Menu, X } from "lucide-react";
+import { Search, ShoppingCart, UserCircle2, Menu, X, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { NavItem } from "@/services/navbarService";
 
-export default function Header() {
+interface Props {
+  initialNav?: NavItem[];
+}
+
+export default function Header({ initialNav }: Props) {
   const { isHydrated, getTotalItems } = useHydratedCart();
   const totalItems = isHydrated ? getTotalItems() : 0;
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
-  const navLinks = [
-    { href: "/", label: "Trang Chủ" },
-    { href: "/shop", label: "Cửa Hàng" },
-    { href: "#", label: "Liên Hệ" },
+  const navLinks = initialNav || [
+    { id: "1", href: "/", label: "Trang Chủ" },
+    { id: "2", href: "/shop", label: "Cửa Hàng" },
+    { id: "3", href: "#", label: "Liên Hệ" },
   ];
 
   return (
@@ -26,13 +32,33 @@ export default function Header() {
           </Link>
           <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-on-surface-variant hover:text-primary transition-colors font-heading font-bold text-base"
-              >
-                {link.label}
-              </Link>
+              <div key={link.id} className="relative group">
+                {link.children && link.children.length > 0 ? (
+                  <>
+                    <button className="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors font-heading font-bold text-base py-2">
+                      {link.label} <ChevronDown className="w-4 h-4 opacity-70 group-hover:rotate-180 transition-transform" />
+                    </button>
+                    <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-outline/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all translate-y-2 group-hover:translate-y-0 p-2 z-50 flex flex-col gap-1">
+                      {link.children.map(child => (
+                        <Link
+                          key={child.id}
+                          href={child.href}
+                          className="px-4 py-2.5 hover:bg-surface-container rounded-lg font-bold text-sm text-on-surface-variant hover:text-primary transition-colors"
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <Link
+                    href={link.href}
+                    className="text-on-surface-variant hover:text-primary transition-colors font-heading font-bold text-base py-2 block"
+                  >
+                    {link.label}
+                  </Link>
+                )}
+              </div>
             ))}
           </div>
         </div>
@@ -69,16 +95,43 @@ export default function Header() {
 
       {/* Mobile Nav */}
       {mobileOpen && (
-        <div className="md:hidden bg-white/95 backdrop-blur-lg border-t border-outline/10 p-6 flex flex-col gap-4">
+        <div className="md:hidden bg-white/95 backdrop-blur-lg border-t border-outline/10 p-6 flex flex-col gap-2 max-h-[80vh] overflow-y-auto">
           {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMobileOpen(false)}
-              className="text-on-surface font-heading font-bold text-lg py-2 hover:text-primary transition-colors"
-            >
-              {link.label}
-            </Link>
+            <div key={link.id} className="flex flex-col border-b border-outline/5 last:border-0 pb-2">
+              {link.children && link.children.length > 0 ? (
+                <>
+                  <button
+                    onClick={() => setOpenSubmenu(openSubmenu === link.id ? null : link.id)}
+                    className="flex items-center justify-between text-on-surface font-heading font-bold text-lg py-2"
+                  >
+                    {link.label}
+                    <ChevronDown className={`w-5 h-5 transition-transform ${openSubmenu === link.id ? "rotate-180" : ""}`} />
+                  </button>
+                  {openSubmenu === link.id && (
+                    <div className="flex flex-col gap-1 pl-4 mt-1 border-l-2 border-primary/20">
+                      {link.children.map(child => (
+                         <Link
+                          key={child.id}
+                          href={child.href}
+                          onClick={() => setMobileOpen(false)}
+                          className="py-2.5 text-on-surface-variant font-bold text-sm hover:text-primary transition-colors"
+                         >
+                           {child.label}
+                         </Link>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Link
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="text-on-surface font-heading font-bold text-lg py-2 hover:text-primary transition-colors block"
+                >
+                  {link.label}
+                </Link>
+              )}
+            </div>
           ))}
         </div>
       )}

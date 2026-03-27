@@ -140,17 +140,14 @@ export default function FeaturedCategoriesManager({ initialCategories }: Props) 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input
                       value={cat.name}
-                      onChange={(e) => {
-                        updateField(index, "name", e.target.value);
-                        updateField(index, "slug", e.target.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
-                      }}
+                      onChange={(e) => updateField(index, "name", e.target.value)}
                       placeholder="Tên danh mục *"
                       className="input !py-2"
                     />
                     <input
                       value={cat.slug}
                       onChange={(e) => updateField(index, "slug", e.target.value)}
-                      placeholder="Slug (tự tạo)"
+                      placeholder="Link đích (VD: /shop?category=xuong-khop)"
                       className="input !py-2 text-outline"
                     />
                   </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Image, Search, Send, Grid, MessageCircle } from "lucide-react";
+import { Image, Search, Send, Grid, MessageCircle, Menu } from "lucide-react";
 
 interface Props {
   heroContent: React.ReactNode;
@@ -9,11 +9,13 @@ interface Props {
   telegramContent: React.ReactNode;
   categoriesContent: React.ReactNode;
   zaloContent?: React.ReactNode;
+  navbarContent?: React.ReactNode;
 }
 
 const TABS = [
   { key: "hero", label: "Hero Banner", icon: Image },
   { key: "seo", label: "SEO", icon: Search },
+  { key: "navbar", label: "Menu Navbar", icon: Menu },
   { key: "telegram", label: "Telegram", icon: Send },
   { key: "zalo", label: "Zalo Bot", icon: MessageCircle },
   { key: "categories", label: "Danh Mục Nổi Bật", icon: Grid },
@@ -21,8 +23,8 @@ const TABS = [
 
 type Tab = typeof TABS[number]["key"];
 
-export default function SettingsTabs({ heroContent, seoContent, telegramContent, zaloContent, categoriesContent }: Props) {
-  const [active, setActive] = useState<Tab>("zalo");
+export default function SettingsTabs({ heroContent, seoContent, telegramContent, zaloContent, categoriesContent, navbarContent }: Props) {
+  const [active, setActive] = useState<Tab>("navbar");
 
   return (
     <div>
@@ -55,6 +57,7 @@ export default function SettingsTabs({ heroContent, seoContent, telegramContent,
       <div className="bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant/10 shadow-sm">
         {active === "hero" && heroContent}
         {active === "seo" && seoContent}
+        {active === "navbar" && navbarContent}
         {active === "telegram" && telegramContent}
         {active === "zalo" && zaloContent}
         {active === "categories" && categoriesContent}

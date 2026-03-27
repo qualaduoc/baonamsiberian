@@ -306,3 +306,22 @@ export async function testZaloAction(formData: FormData) {
     return { error: err.message };
   }
 }
+
+// ==========================================
+// NAVBAR MENU - SETTINGS
+// ==========================================
+import { updateNavbarSettings, NavItem } from "@/services/navbarService";
+
+export async function updateNavbarAction(dataJSON: string) {
+  try {
+    const data: NavItem[] = JSON.parse(dataJSON);
+    const result = await updateNavbarSettings(data);
+    if (result.success) {
+      revalidatePath("/admin/settings");
+      revalidatePath("/");
+    }
+    return result;
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}

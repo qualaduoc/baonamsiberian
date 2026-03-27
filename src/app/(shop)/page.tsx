@@ -78,9 +78,10 @@ export default async function HomePage() {
               const isHero = i === 0;
               const isWide = i === 3;
               return (
-                <div
+                <Link
+                  href={cat.slug?.startsWith('/') ? cat.slug : `/shop?category=${cat.slug || ''}`}
                   key={cat.id}
-                  className={`relative group overflow-hidden rounded-xl bg-surface-container-lowest ${
+                  className={`relative block group overflow-hidden rounded-xl bg-surface-container-lowest ${
                     isHero ? "md:col-span-2 md:row-span-2 h-[500px]" : isWide ? "md:col-span-2 h-[238px]" : "h-[238px]"
                   }`}
                 >
@@ -91,13 +92,12 @@ export default async function HomePage() {
                       <div className="absolute bottom-0 p-8 w-full">
                         <h3 className="font-heading text-3xl font-bold text-white mb-2">{cat.name}</h3>
                         {cat.description && <p className="text-white/80 mb-6 max-w-xs">{cat.description}</p>}
-                        <Link href={`/shop?category=${cat.slug}`} className="bg-white text-primary px-6 py-2 rounded-full font-bold text-sm inline-block hover:bg-primary-container transition-colors">Khám phá</Link>
+                        <span className="bg-white text-primary px-6 py-2 rounded-full font-bold text-sm inline-block group-hover:bg-primary-container transition-colors">Khám phá</span>
                       </div>
                     </>
                   ) : isWide ? (
                     <>
-                      <div className="absolute inset-0 bg-gradient-to-r from-green-900/60 to-transparent"></div>
-                      <div className="absolute inset-0 flex flex-col justify-center p-8">
+                      <div className="absolute inset-0 bg-gradient-to-r from-green-900/60 to-transparent flex flex-col justify-center p-8 group-hover:from-green-900/80 transition-colors">
                         <h3 className="font-heading text-2xl font-bold text-white mb-2">{cat.name}</h3>
                         {cat.description && <p className="text-white/80 text-sm max-w-[200px]">{cat.description}</p>}
                       </div>
@@ -110,7 +110,7 @@ export default async function HomePage() {
                       </div>
                     </>
                   )}
-                </div>
+                </Link>
               );
             })}
           </div>
