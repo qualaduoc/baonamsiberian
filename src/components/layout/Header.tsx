@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useHydratedCart } from "@/features/cart/useHydratedCart";
-import { Search, ShoppingCart, UserCircle2, Menu, X, ChevronDown } from "lucide-react";
+import { Search, ShoppingCart, Menu, X, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { NavItem } from "@/services/navbarService";
 
@@ -75,9 +75,6 @@ export default function Header({ initialNav }: Props) {
                 {totalItems}
               </span>
             )}
-          </Link>
-          <Link href="/login" className="p-2 hover:bg-primary/5 rounded-full transition-all active:scale-90 duration-200">
-            <UserCircle2 className="w-5 h-5 text-on-surface-variant" />
           </Link>
 
           {/* Mobile Menu Toggle */}
