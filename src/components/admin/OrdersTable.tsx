@@ -26,6 +26,7 @@ const NEXT_STATUS: Record<string, string[]> = {
 
 export default function OrdersTable({ orders }: Props) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [zoomImg, setZoomImg] = useState<string | null>(null);
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     setLoadingId(orderId);
@@ -162,15 +163,39 @@ export default function OrdersTable({ orders }: Props) {
             </div>
 
             {/* Items */}
-            <div className="flex flex-col gap-2 mb-4">
-              {order.order_items.map((oi) => (
-                <div key={oi.id} className="flex justify-between items-center text-sm bg-gray-50 px-4 py-2 rounded-lg">
-                  <span className="font-medium text-text">
-                    {oi.variant?.product?.name || "Sản phẩm"} — <span className="text-gray-500">{oi.variant?.name || "Biến thể"}</span>
-                  </span>
-                  <span className="text-gray-600">x{oi.quantity} = <strong className="text-cta">{formatVND(oi.price * oi.quantity)}</strong></span>
-                </div>
-              ))}
+            <div className="flex flex-col gap-3 mb-4 mt-2">
+              {order.order_items.map((oi) => {
+                const imgUrl = oi.variant?.product?.image_url;
+                return (
+                  <div key={oi.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-sm bg-surface-container-lowest border border-outline-variant/10 px-4 py-3 rounded-xl gap-3">
+                    <div className="flex items-center gap-4 flex-1">
+                      {imgUrl ? (
+                        <div 
+                          className="w-12 h-12 rounded-lg border border-outline-variant/20 overflow-hidden cursor-zoom-in shrink-0 bg-white"
+                          onClick={() => setZoomImg(imgUrl)}
+                        >
+                          <img src={imgUrl} alt="Product" className="w-full h-full object-contain" />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0">
+                          <Package className="w-5 h-5 text-on-surface-variant/50" />
+                        </div>
+                      )}
+                      
+                      <span className="font-bold text-on-surface leading-tight">
+                        {oi.variant?.product?.name || "Sản phẩm"} 
+                        <span className="text-on-surface-variant font-medium block sm:inline sm:ml-2">
+                          — {oi.variant?.name || "Biến thể"}
+                        </span>
+                      </span>
+                    </div>
+
+                    <div className="text-on-surface-variant font-medium whitespace-nowrap bg-surface px-3 py-1.5 rounded-lg border border-outline-variant/5">
+                      x{oi.quantity} = <strong className="text-primary text-base ml-1">{formatVND(oi.price * oi.quantity)}</strong>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Footer */}
@@ -198,6 +223,26 @@ export default function OrdersTable({ orders }: Props) {
           </div>
         );
       })}
+      {/* Image Zoom Modal */}
+      {zoomImg && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 cursor-zoom-out"
+          onClick={() => setZoomImg(null)}
+        >
+          <img 
+            src={zoomImg} 
+            alt="Zoomed Product" 
+            className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl bg-white p-2 border-4 border-white"
+            onClick={(e) => e.stopPropagation()} 
+          />
+          <button 
+            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-md"
+            onClick={() => setZoomImg(null)}
+          >
+            <XCircle className="w-8 h-8" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

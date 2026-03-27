@@ -5,10 +5,11 @@ import {
   createVariantAction, updateVariantAction, deleteVariantAction,
   createCategoryAction
 } from "@/app/actions/adminActions";
+import { scrapeSiberianAction } from "@/app/actions/scraperAction";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { Plus, Trash2, Loader2, Box, Tag, Pencil, X, Save, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Loader2, Box, Tag, Pencil, X, Save, Eye, EyeOff, DownloadCloud } from "lucide-react";
 import { toSlug } from "@/utils/toSlug";
 
 interface Category { id: string; name: string; slug: string }
@@ -29,6 +30,13 @@ export default function ProductsManager({ products, categories }: Props) {
   const [newProductSlug, setNewProductSlug] = useState("");
   const [newCatName, setNewCatName] = useState("");
   const [newCatSlug, setNewCatSlug] = useState("");
+  
+  // Scraper states
+  const [scrapeUrl, setScrapeUrl] = useState("");
+  const [scraping, setScraping] = useState(false);
+  const [scrapedOriginalPrice, setScrapedOriginalPrice] = useState("");
+  const [scrapedImage, setScrapedImage] = useState("");
+  const [scrapedDesc, setScrapedDesc] = useState("");
 
   const fmtVND = (n: number) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n);
 
@@ -39,6 +47,26 @@ export default function ProductsManager({ products, categories }: Props) {
     setLoading(false);
     if (res?.error) toast.error(res.error);
     else { toast.success(msg); resetFn?.(); router.refresh(); }
+  };
+
+  const handleScrape = async () => {
+    if (!scrapeUrl) return toast.error("Vui lòng nhập link Siberian Health cần lấy!");
+    setScraping(true);
+    const toastId = toast.loading("Đang bóc tách dữ liệu AI...");
+    const res = await scrapeSiberianAction(scrapeUrl);
+    setScraping(false);
+    
+    if (res?.error) {
+      toast.error(res.error, { id: toastId });
+    } else if (res?.data) {
+      toast.success("Bóc tách thành công! Vui lòng kiểm tra lại.", { id: toastId });
+      setNewProductName(res.data.name);
+      setNewProductSlug(toSlug(res.data.name));
+      setScrapedOriginalPrice(res.data.price?.toString() || "");
+      setScrapedImage(res.data.image_url || "");
+      setScrapedDesc(res.data.short_description || "");
+      setScrapeUrl(""); // Clear
+    }
   };
 
   return (
@@ -75,37 +103,80 @@ export default function ProductsManager({ products, categories }: Props) {
 
       {/* Form Tạo SP Mới */}
       {showNew && (
-        <form onSubmit={(e) => handleAction(createProductAction, e, "Tạo sản phẩm thành công!", () => { setShowNew(false); setNewProductName(""); setNewProductSlug(""); })} className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/10 mb-6 shadow-sm">
-          <h3 className="font-bold text-lg mb-4">Tạo Sản Phẩm Mới</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <input
-              name="name" required placeholder="Tên sản phẩm *" className="input"
-              value={newProductName}
-              onChange={(e) => { setNewProductName(e.target.value); setNewProductSlug(toSlug(e.target.value)); }}
-            />
-            <input
-              name="slug" required placeholder="Slug (tự tạo từ tên)" className="input text-outline"
-              value={newProductSlug}
-              onChange={(e) => setNewProductSlug(e.target.value)}
-            />
-            <select name="categoryId" className="input"><option value="">-- Chọn danh mục --</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-            <input name="imageUrl" placeholder="URL ảnh sản phẩm" className="input" />
+        <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/10 mb-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+             <h3 className="font-bold text-lg">Tạo Sản Phẩm Mới</h3>
+             <button type="button" onClick={() => setShowNew(false)} className="p-2 hover:bg-surface-container-high rounded-full"><X className="w-4 h-4" /></button>
           </div>
 
-          {/* GIÁ & KHO — Nhập ngay khi tạo SP */}
-          <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 mb-4">
-            <h4 className="font-bold text-sm text-primary mb-3 uppercase tracking-wider">💰 Thiết Lập Giá Bán</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <input name="price" type="number" required placeholder="Giá bán *" className="input !py-2" />
-              <input name="originalPrice" type="number" placeholder="Giá gốc (Gạch ngang)" className="input !py-2" />
-              <input name="stock" type="number" defaultValue={100} placeholder="Tồn kho" className="input !py-2" />
-              <input name="variantName" placeholder="Quy cách (VD: Hộp 30 viên)" className="input !py-2" defaultValue="Mặc định" />
+          {/* AI Scraper Tool */}
+          <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6 relative overflow-hidden">
+            <h4 className="font-bold text-sm text-primary mb-2 flex items-center gap-2">
+              <DownloadCloud className="w-4 h-4" /> ⚡ Cài đặt nhanh bằng Link Siberian Health
+            </h4>
+            <div className="flex gap-2 relative z-10">
+              <input 
+                value={scrapeUrl} 
+                onChange={(e) => setScrapeUrl(e.target.value)} 
+                placeholder="Dán link sản phẩm (Ví dụ: https://vn.siberianhealth.com/...)" 
+                className="input flex-1 bg-white" 
+              />
+              <button 
+                type="button" 
+                onClick={handleScrape} 
+                className="btn-primary flex items-center gap-2 whitespace-nowrap !py-2 !px-4" 
+                disabled={scraping}
+              >
+                {scraping ? <Loader2 className="w-4 h-4 animate-spin" /> : <DownloadCloud className="w-4 h-4" />} Rút Trích Dữ Liệu
+              </button>
             </div>
+            {scraping && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-20 flex items-center justify-center font-bold text-primary animate-pulse">Đang vượt rào lấy dữ liệu...</div>}
           </div>
 
-          <textarea name="description" placeholder="Mô tả chi tiết công dụng sản phẩm..." className="input w-full min-h-[80px] resize-y" />
-          <button type="submit" disabled={loading} className="btn-primary mt-4 !py-2 !px-6 !rounded-lg cursor-pointer">{loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Tạo Sản Phẩm"}</button>
-        </form>
+          <form onSubmit={(e) => handleAction(createProductAction, e, "Tạo sản phẩm thành công!", () => { 
+            setShowNew(false); setNewProductName(""); setNewProductSlug(""); setScrapedOriginalPrice(""); setScrapedImage(""); setScrapedDesc(""); 
+          })}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <input
+                name="name" required placeholder="Tên sản phẩm *" className="input"
+                value={newProductName}
+                onChange={(e) => { setNewProductName(e.target.value); setNewProductSlug(toSlug(e.target.value)); }}
+              />
+              <input
+                name="slug" required placeholder="Slug (tự tạo từ tên)" className="input text-outline"
+                value={newProductSlug}
+                onChange={(e) => setNewProductSlug(e.target.value)}
+              />
+              <select name="categoryId" className="input"><option value="">-- Chọn danh mục --</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+              <input 
+                name="imageUrl" placeholder="URL ảnh sản phẩm" className="input" 
+                value={scrapedImage} onChange={e => setScrapedImage(e.target.value)}
+              />
+            </div>
+
+            {/* GIÁ & KHO — Nhập ngay khi tạo SP */}
+            <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 mb-4">
+              <h4 className="font-bold text-sm text-primary mb-3 uppercase tracking-wider">💰 Thiết Lập Giá Bán</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <input 
+                  name="price" type="number" required placeholder="Giá bán *" className="input !py-2" 
+                />
+                <input 
+                  name="originalPrice" type="number" placeholder="Giá gốc (Gạch ngang)" className="input !py-2" 
+                  value={scrapedOriginalPrice} onChange={e => setScrapedOriginalPrice(e.target.value)}
+                />
+                <input name="stock" type="number" defaultValue={100} placeholder="Tồn kho" className="input !py-2" />
+                <input name="variantName" placeholder="Quy cách (VD: Hộp 30 viên)" className="input !py-2" defaultValue="Mặc định" />
+              </div>
+            </div>
+
+            <textarea 
+              name="description" placeholder="Mô tả chi tiết công dụng sản phẩm..." className="input w-full min-h-[80px] resize-y" 
+              value={scrapedDesc} onChange={e => setScrapedDesc(e.target.value)}
+            />
+            <button type="submit" disabled={loading} className="btn-primary mt-4 !py-2 !px-6 !rounded-lg cursor-pointer">{loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Lưu Sản Phẩm Mới"}</button>
+          </form>
+        </div>
       )}
 
       {/* Danh sách SP */}
