@@ -1,22 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { Image, Search } from "lucide-react";
+import { Image, Search, Send } from "lucide-react";
 
 interface Props {
   heroContent: React.ReactNode;
   seoContent: React.ReactNode;
+  telegramContent: React.ReactNode;
 }
 
 const TABS = [
   { key: "hero", label: "Hero Banner", icon: Image },
   { key: "seo", label: "SEO", icon: Search },
+  { key: "telegram", label: "Telegram", icon: Send },
 ] as const;
 
 type Tab = typeof TABS[number]["key"];
 
-export default function SettingsTabs({ heroContent, seoContent }: Props) {
-  const [active, setActive] = useState<Tab>("hero");
+export default function SettingsTabs({ heroContent, seoContent, telegramContent }: Props) {
+  const [active, setActive] = useState<Tab>("telegram");
 
   return (
     <div>
@@ -47,7 +49,9 @@ export default function SettingsTabs({ heroContent, seoContent }: Props) {
 
       {/* Tab Content */}
       <div className="bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant/10 shadow-sm">
-        {active === "hero" ? heroContent : seoContent}
+        {active === "hero" && heroContent}
+        {active === "seo" && seoContent}
+        {active === "telegram" && telegramContent}
       </div>
     </div>
   );

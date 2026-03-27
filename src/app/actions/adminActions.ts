@@ -219,3 +219,41 @@ export async function updateSeoAction(formData: FormData) {
   revalidatePath("/admin/settings");
   return res;
 }
+
+// ========== TELEGRAM SETTINGS ==========
+export async function updateTelegramAction(formData: FormData) {
+  const { updateTelegramSettings } = await import("@/services/telegramService");
+  const settings = {
+    bot_token: formData.get("bot_token") as string,
+    chat_id: formData.get("chat_id") as string,
+    is_active: formData.get("is_active") === "true",
+  };
+  const res = await updateTelegramSettings(settings);
+  revalidatePath("/admin/settings");
+  revalidatePath("/");
+  return res;
+}
+
+export async function testTelegramAction(formData: FormData) {
+  const token = formData.get("bot_token") as string;
+  const chatId = formData.get("chat_id") as string;
+  if (!token || !chatId) return { error: "Thiếu Bot Token hoặc Chat ID" };
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: "✅ Cấu hình Telegram cho hệ thống Bảo Nam Siberian đã thành công!",
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      return { error: data.description || "Lỗi giao tiếp với Telegram API" };
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}

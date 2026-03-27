@@ -1,19 +1,21 @@
 "use server";
 
 import { getServiceSupabase } from "@/services/supabase";
+import { getTelegramSettings } from "@/services/telegramService";
 
 // Bắn tin nhắn chốt đơn vào BOT Telegram của Khầy (Chạy ngầm không ảnh hưởng tốc độ Web)
-async function sendTelegramNotification(orderId: string, name: string, phone: string, address: string, totalAmount: number, orderItemsRecord: any[]) {
-    const token = process.env.TELEGRAM_BOT_TOKEN;
-    const chatId = process.env.TELEGRAM_CHAT_ID;
-    
-    if (!token || !chatId) {
-        console.warn("Chưa cấu hình TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID. Tạm bỏ qua thông báo.");
+async function sendTelegramNotification(orderId: string, name: string, phone: string, address: string, totalAmount: number, telegramItems: any[]) {
+    const settings = await getTelegramSettings();
+    if (!settings.is_active || !settings.bot_token || !settings.chat_id) {
+        console.warn("Chưa cấu hình TELEGRAM_BOT_TOKEN hoặc bị tắt. Tạm bỏ qua thông báo.");
         return;
     }
 
+    const token = settings.bot_token;
+    const chatId = settings.chat_id;
+
     // Định dạng danh sách món ăn/thuốc cho đẹp mắt
-    const itemsListRegex = orderItemsRecord.map(i => `▪️ Hộp/Loại ID \`${i.variant_id.substring(0,6)}\` x ${i.quantity} (Giá: ${new Intl.NumberFormat('vi-VN').format(i.price)}đ)`).join("\n");
+    const itemsListRegex = telegramItems.map(i => `▪️ ${i.name} x ${i.quantity} (Giá: ${new Intl.NumberFormat('vi-VN').format(i.price)}đ)`).join("\n");
 
     const message = `
 🔥 *DING DONG! CÓ ĐƠN HÀNG MỚI* 🔥
@@ -78,6 +80,8 @@ export async function processCheckout(formData: FormData, itemsText: string) {
         const orderItemsRecord: any[] = [];
         const stockUpdates: { id: string, stock: number }[] = [];
 
+        const telegramItems: any[] = [];
+
         // Kiểm tra tồn kho và tính tổng tiền
         for (const item of items) {
           const dbVariant = variants.find(v => v.id === item.variantId);
@@ -93,6 +97,12 @@ export async function processCheckout(formData: FormData, itemsText: string) {
              variant_id: item.variantId,
              quantity: item.quantity,
              price: dbVariant.price // Lấy giá THẬT của Database
+          });
+
+          telegramItems.push({
+             name: dbVariant.name,
+             quantity: item.quantity,
+             price: dbVariant.price
           });
 
           stockUpdates.push({
@@ -138,7 +148,7 @@ export async function processCheckout(formData: FormData, itemsText: string) {
         }
 
         // 6. Kích hoạt Webhook bắn thẳng Data Order về Smartphone của Khầy (Chạy không chờ await để Web load cực nhanh)
-        sendTelegramNotification(order.id, name, phone1, address, totalAmount, orderItemsRecord);
+        sendTelegramNotification(order.id, name, phone1, address, totalAmount, telegramItems);
 
         // Thành công!
         return { success: true, orderId: order.id };
