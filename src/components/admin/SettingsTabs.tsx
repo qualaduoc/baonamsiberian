@@ -10,26 +10,30 @@ interface Props {
   categoriesContent: React.ReactNode;
   zaloContent?: React.ReactNode;
   navbarContent?: React.ReactNode;
+  footerContent?: React.ReactNode;
+  pagesContent?: React.ReactNode;
 }
 
 const TABS = [
   { key: "hero", label: "Hero Banner", icon: Image },
-  { key: "seo", label: "SEO", icon: Search },
   { key: "navbar", label: "Menu Navbar", icon: Menu },
+  { key: "categories", label: "Danh Mục Nổi Bật", icon: Grid },
+  { key: "footer", label: "Chân Trang (Footer)", icon: Menu },
+  { key: "pages", label: "Trang Phụ (Pages)", icon: Grid },
+  { key: "seo", label: "SEO", icon: Search },
   { key: "telegram", label: "Telegram", icon: Send },
   { key: "zalo", label: "Zalo Bot", icon: MessageCircle },
-  { key: "categories", label: "Danh Mục Nổi Bật", icon: Grid },
 ] as const;
 
 type Tab = typeof TABS[number]["key"];
 
-export default function SettingsTabs({ heroContent, seoContent, telegramContent, zaloContent, categoriesContent, navbarContent }: Props) {
-  const [active, setActive] = useState<Tab>("navbar");
+export default function SettingsTabs({ heroContent, seoContent, telegramContent, zaloContent, categoriesContent, navbarContent, footerContent, pagesContent }: Props) {
+  const [active, setActive] = useState<Tab>("pages");
 
   return (
     <div>
       {/* Navbar Tabs */}
-      <div className="flex border-b border-outline-variant/15 mb-8">
+      <div className="flex border-b border-outline-variant/15 mb-8 flex-wrap">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = active === tab.key;
@@ -58,6 +62,8 @@ export default function SettingsTabs({ heroContent, seoContent, telegramContent,
         {active === "hero" && heroContent}
         {active === "seo" && seoContent}
         {active === "navbar" && navbarContent}
+        {active === "footer" && footerContent}
+        {active === "pages" && pagesContent}
         {active === "telegram" && telegramContent}
         {active === "zalo" && zaloContent}
         {active === "categories" && categoriesContent}

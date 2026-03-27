@@ -95,8 +95,9 @@ export default function ProductsManager({ products, categories }: Props) {
           {/* GIÁ & KHO — Nhập ngay khi tạo SP */}
           <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 mb-4">
             <h4 className="font-bold text-sm text-primary mb-3 uppercase tracking-wider">💰 Thiết Lập Giá Bán</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <input name="price" type="number" required placeholder="Giá bán *" className="input !py-2" />
+              <input name="originalPrice" type="number" placeholder="Giá gốc (Gạch ngang)" className="input !py-2" />
               <input name="stock" type="number" defaultValue={100} placeholder="Tồn kho" className="input !py-2" />
               <input name="variantName" placeholder="Quy cách (VD: Hộp 30 viên)" className="input !py-2" defaultValue="Mặc định" />
             </div>
@@ -120,6 +121,16 @@ export default function ProductsManager({ products, categories }: Props) {
               {editId === p.id ? (
                 <form onSubmit={(e) => handleAction(updateProductAction, e, "Cập nhật thành công!", () => setEditId(null))} className="space-y-4">
                   <input type="hidden" name="id" value={p.id} />
+                  <input type="hidden" name="firstVariantId" value={p.variants[0]?.id || ""} />
+                  
+                  <div className="bg-primary/5 p-4 rounded-xl mb-4 border border-primary/10">
+                    <h4 className="font-bold text-sm text-primary mb-3">📍 Thông tin Giá (Quy cách mặc định / đầu tiên)</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <input name="price" type="number" defaultValue={p.variants[0]?.price} className="input bg-white" placeholder="Giá bán hiện tại *" required />
+                      <input name="originalPrice" type="number" defaultValue={p.variants[0]?.original_price || ""} className="input bg-white" placeholder="Giá gốc (Gạch ngang)" />
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input name="name" defaultValue={p.name} className="input" placeholder="Tên SP" required />
                     <input name="slug" defaultValue={p.slug} className="input" placeholder="Slug" />
@@ -165,9 +176,10 @@ export default function ProductsManager({ products, categories }: Props) {
               {variantForId === p.id && (
                 <form onSubmit={(e) => handleAction(createVariantAction, e, "Thêm giá thành công!", () => setVariantForId(null))} className="bg-surface p-4 rounded-xl mb-4 border border-outline-variant/10">
                   <input type="hidden" name="productId" value={p.id} />
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <input name="variantName" required placeholder="Tên (Hộp 30 viên)" className="input !py-2" />
                     <input name="price" type="number" required placeholder="Giá bán" className="input !py-2" />
+                    <input name="originalPrice" type="number" placeholder="Giá gốc" className="input !py-2" />
                     <input name="stock" type="number" required placeholder="Tồn kho" className="input !py-2" />
                   </div>
                   <button type="submit" disabled={loading} className="btn-primary mt-3 !py-2 !px-5 !rounded-lg text-sm cursor-pointer">{loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Lưu Giá"}</button>
@@ -185,7 +197,7 @@ export default function ProductsManager({ products, categories }: Props) {
                           <input name="variantName" defaultValue={v.name} className="input !py-1.5 w-full text-sm" />
                           <div className="grid grid-cols-3 gap-2">
                             <input name="price" type="number" defaultValue={v.price} className="input !py-1.5 text-sm" placeholder="Giá bán" />
-                            <input name="original_price" type="number" defaultValue={v.original_price || ""} className="input !py-1.5 text-sm" placeholder="Giá gốc" />
+                            <input name="originalPrice" type="number" defaultValue={v.original_price || ""} className="input !py-1.5 text-sm" placeholder="Giá gốc" />
                             <input name="stock" type="number" defaultValue={v.stock} className="input !py-1.5 text-sm" placeholder="Kho" />
                           </div>
                           <div className="flex gap-1">

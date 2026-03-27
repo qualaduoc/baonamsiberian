@@ -117,7 +117,12 @@ export default function AddToCartForm({ product }: Props) {
                   </span>
                 )}
                 <span className="block text-base font-bold text-on-surface">{v.name}</span>
-                <span className="block text-lg font-black text-primary mt-1">{fmtVND(v.price)}</span>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <span className="text-lg font-black text-primary">{fmtVND(v.price)}</span>
+                  {v.original_price && v.original_price > v.price && (
+                    <span className="text-xs font-bold text-on-surface-variant line-through">{fmtVND(v.original_price)}</span>
+                  )}
+                </div>
                 {v.stock < 1 ? (
                   <span className="block text-xs text-error font-bold mt-1">Hết hàng</span>
                 ) : (

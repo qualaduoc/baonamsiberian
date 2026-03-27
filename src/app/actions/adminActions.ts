@@ -42,6 +42,7 @@ export async function createProductAction(formData: FormData) {
     const categoryId = formData.get("categoryId") as string;
     const imageUrl = formData.get("imageUrl") as string;
     const price = Number(formData.get("price")) || 0;
+    const originalPrice = Number(formData.get("originalPrice")) || null;
     const stock = Number(formData.get("stock")) || 100;
     const variantName = (formData.get("variantName") as string) || "Mặc định";
 
@@ -61,12 +62,13 @@ export async function createProductAction(formData: FormData) {
 
     if (error) return { error: error.message };
 
-    // Tạo biến thể kèm giá (chỉ dùng cột cũ: name, price, stock)
+    // Tạo biến thể kèm giá
     if (price > 0 && data) {
       const { error: vErr } = await supabase.from("product_variants").insert({
         product_id: data.id,
         name: variantName,
         price,
+        original_price: originalPrice,
         stock,
       });
       if (vErr) console.error("Variant error:", vErr.message);
@@ -87,6 +89,13 @@ export async function updateProductAction(formData: FormData) {
     const description = formData.get("description") as string;
     const categoryId = formData.get("categoryId") as string;
     const imageUrl = formData.get("imageUrl") as string;
+    const is_active = formData.get("is_active") === "true";
+    const badge = formData.get("badge") as string;
+    const short_description = formData.get("short_description") as string;
+
+    const firstVariantId = formData.get("firstVariantId") as string;
+    const priceStr = formData.get("price") as string;
+    const originalPriceStr = formData.get("originalPrice") as string;
 
     if (!id || !name) return { error: "Thiếu thông tin." };
 
@@ -97,10 +106,26 @@ export async function updateProductAction(formData: FormData) {
         description: description || null,
         category_id: categoryId || null,
         image_url: imageUrl || null,
+        is_active,
+        badge: badge || null,
+        short_description: short_description || null,
       })
       .eq("id", id);
 
     if (error) return { error: error.message };
+
+    // Update variant if provided from the main product form
+    if (firstVariantId && priceStr) {
+      const price = Number(priceStr);
+      const originalPrice = originalPriceStr ? Number(originalPriceStr) : null;
+      if (price > 0) {
+        await supabase
+          .from("product_variants")
+          .update({ price, original_price: originalPrice })
+          .eq("id", firstVariantId);
+      }
+    }
+
     revalidatePath("/admin/products");
     revalidatePath("/");
     return { success: true };
@@ -124,6 +149,7 @@ export async function createVariantAction(formData: FormData) {
     const productId = formData.get("productId") as string;
     const name = formData.get("variantName") as string;
     const price = Number(formData.get("price"));
+    const originalPrice = Number(formData.get("originalPrice")) || null;
     const stock = Number(formData.get("stock"));
 
     if (!productId || !name || !price) return { error: "Thiếu thông tin biến thể." };
@@ -132,6 +158,7 @@ export async function createVariantAction(formData: FormData) {
       product_id: productId,
       name,
       price,
+      original_price: originalPrice,
       stock: stock || 0,
     });
 
@@ -147,13 +174,14 @@ export async function updateVariantAction(formData: FormData) {
     const id = formData.get("variantId") as string;
     const name = formData.get("variantName") as string;
     const price = Number(formData.get("price"));
+    const originalPrice = Number(formData.get("originalPrice")) || null;
     const stock = Number(formData.get("stock"));
 
     if (!id) return { error: "Thiếu ID biến thể." };
 
     const { error } = await supabase
       .from("product_variants")
-      .update({ name, price, stock })
+      .update({ name, price, original_price: originalPrice, stock })
       .eq("id", id);
 
     if (error) return { error: error.message };
@@ -321,6 +349,93 @@ export async function updateNavbarAction(dataJSON: string) {
       revalidatePath("/");
     }
     return result;
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}
+
+// ==========================================
+// CATEGORIES
+// ==========================================
+import { createCategory, updateCategory, deleteCategory } from "@/services/categoryService";
+
+export async function adminCreateCategoryAction(formData: FormData) {
+  const name = formData.get("name") as string;
+  const slug = formData.get("slug") as string;
+  const image_url = formData.get("image_url") as string;
+
+  if (!name || !slug) return { error: "Thiếu tên hoặc slug" };
+
+  const res = await createCategory({ name, slug, image_url: image_url || null });
+  if (res.success) {
+    revalidatePath("/admin/categories");
+    revalidatePath("/admin/products");
+    revalidatePath("/shop");
+  }
+  return res;
+}
+
+export async function adminUpdateCategoryAction(id: string, formData: FormData) {
+  const name = formData.get("name") as string;
+  const slug = formData.get("slug") as string;
+  const image_url = formData.get("image_url") as string;
+
+  if (!name || !slug) return { error: "Thiếu tên hoặc slug" };
+
+  const res = await updateCategory(id, { name, slug, image_url: image_url || null });
+  if (res.success) {
+    revalidatePath("/admin/categories");
+    revalidatePath("/admin/products");
+    revalidatePath("/shop");
+  }
+  return res;
+}
+
+export async function adminDeleteCategoryAction(id: string) {
+  const res = await deleteCategory(id);
+  if (res.success) {
+    revalidatePath("/admin/categories");
+    revalidatePath("/admin/products");
+    revalidatePath("/shop");
+  }
+  return res;
+}
+
+// ==========================================
+// FOOTER
+// ==========================================
+import { updateFooterSettings } from "@/services/footerService";
+
+export async function updateFooterAction(jsonSettings: string) {
+  try {
+    const settings = JSON.parse(jsonSettings);
+    const res = await updateFooterSettings(settings);
+    if (res.success) {
+      revalidatePath("/");
+      revalidatePath("/shop");
+    }
+    return res;
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}
+
+// ==========================================
+// STATIC PAGES
+// ==========================================
+import { updatePagesSettings } from "@/services/pagesService";
+
+export async function updatePagesAction(jsonSettings: string) {
+  try {
+    const settings = JSON.parse(jsonSettings);
+    const res = await updatePagesSettings(settings);
+    if (res.success) {
+      revalidatePath("/about");
+      revalidatePath("/privacy");
+      revalidatePath("/terms");
+      revalidatePath("/contact");
+    }
+    return res;
   } catch (err: any) {
     return { error: err.message };
   }
