@@ -1,26 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { Image, Search, Send, Grid } from "lucide-react";
+import { Image, Search, Send, Grid, MessageCircle } from "lucide-react";
 
 interface Props {
   heroContent: React.ReactNode;
   seoContent: React.ReactNode;
   telegramContent: React.ReactNode;
   categoriesContent: React.ReactNode;
+  zaloContent?: React.ReactNode;
 }
 
 const TABS = [
   { key: "hero", label: "Hero Banner", icon: Image },
   { key: "seo", label: "SEO", icon: Search },
   { key: "telegram", label: "Telegram", icon: Send },
+  { key: "zalo", label: "Zalo Bot", icon: MessageCircle },
   { key: "categories", label: "Danh Mục Nổi Bật", icon: Grid },
 ] as const;
 
 type Tab = typeof TABS[number]["key"];
 
-export default function SettingsTabs({ heroContent, seoContent, telegramContent, categoriesContent }: Props) {
-  const [active, setActive] = useState<Tab>("categories");
+export default function SettingsTabs({ heroContent, seoContent, telegramContent, zaloContent, categoriesContent }: Props) {
+  const [active, setActive] = useState<Tab>("zalo");
 
   return (
     <div>
@@ -54,6 +56,7 @@ export default function SettingsTabs({ heroContent, seoContent, telegramContent,
         {active === "hero" && heroContent}
         {active === "seo" && seoContent}
         {active === "telegram" && telegramContent}
+        {active === "zalo" && zaloContent}
         {active === "categories" && categoriesContent}
       </div>
     </div>

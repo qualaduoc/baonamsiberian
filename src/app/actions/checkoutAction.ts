@@ -2,6 +2,7 @@
 
 import { getServiceSupabase } from "@/services/supabase";
 import { getTelegramSettings } from "@/services/telegramService";
+import { getZaloSettings } from "@/services/zaloService";
 
 // Bắn tin nhắn chốt đơn vào BOT Telegram của Khầy (Chạy ngầm không ảnh hưởng tốc độ Web)
 async function sendTelegramNotification(orderId: string, name: string, phone: string, address: string, totalAmount: number, telegramItems: any[]) {
@@ -69,7 +70,7 @@ export async function processCheckout(formData: FormData, itemsText: string) {
         const variantIds = items.map(i => i.variantId);
         const { data: variants, error: variantErr } = await supabase
           .from("product_variants")
-          .select("id, price, stock, name")
+          .select("id, price, stock, name, product_id, products (name)")
           .in("id", variantIds);
 
         if (variantErr || !variants) {
@@ -99,8 +100,11 @@ export async function processCheckout(formData: FormData, itemsText: string) {
              price: dbVariant.price // Lấy giá THẬT của Database
           });
 
+          const productName = (dbVariant.products as any)?.name || "Sản phẩm";
+          const variantName = dbVariant.name === "Mặc định" ? "" : ` (${dbVariant.name})`;
+          
           telegramItems.push({
-             name: dbVariant.name,
+             name: `${productName}${variantName}`,
              quantity: item.quantity,
              price: dbVariant.price
           });
@@ -147,8 +151,36 @@ export async function processCheckout(formData: FormData, itemsText: string) {
              .eq("id", update.id);
         }
 
+        // Bắn tin nhắn chốt đơn vào BOT Zalo của Khầy
+        const sendZaloNotification = async () => {
+             const zaloSettings = await getZaloSettings();
+             if (zaloSettings.is_active && zaloSettings.api_key) {
+                 const productString = telegramItems.map(item => `${item.quantity}x ${item.name}`).join("\n");
+                 const payload = {
+                     customer: name,
+                     product: productString,
+                     amount: totalAmount.toString(),
+                     phone: phone1,
+                     note: `Địa chỉ: ${address}. Đơn hàng ID: ${order.id}`
+                 };
+                 try {
+                     await fetch(zaloSettings.endpoint || "https://zl.aiphocap.vn/api/webhook/order", {
+                         method: "POST",
+                         headers: {
+                             "Content-Type": "application/json",
+                             "X-API-Key": zaloSettings.api_key
+                         },
+                         body: JSON.stringify(payload)
+                     });
+                 } catch (err) {
+                     console.error("Zalo Webhook Warning:", err);
+                 }
+             }
+        };
+
         // 6. Kích hoạt Webhook bắn thẳng Data Order về Smartphone của Khầy (Chạy không chờ await để Web load cực nhanh)
         sendTelegramNotification(order.id, name, phone1, address, totalAmount, telegramItems);
+        sendZaloNotification();
 
         // Thành công!
         return { success: true, orderId: order.id };

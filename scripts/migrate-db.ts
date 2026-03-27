@@ -29,11 +29,11 @@ CREATE TABLE IF NOT EXISTS site_settings (
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'site_settings' AND policyname = 'Public read site_settings') THEN
-    CREATE POLICY "Public read site_settings" ON site_settings FOR SELECT USING (key != 'telegram_settings');
+    CREATE POLICY "Public read site_settings" ON site_settings FOR SELECT USING (key NOT IN ('telegram_settings', 'zalo_settings'));
   ELSE
     -- Recreate the policy just in case it exists to enforce security
     DROP POLICY "Public read site_settings" ON site_settings;
-    CREATE POLICY "Public read site_settings" ON site_settings FOR SELECT USING (key != 'telegram_settings');
+    CREATE POLICY "Public read site_settings" ON site_settings FOR SELECT USING (key NOT IN ('telegram_settings', 'zalo_settings'));
   END IF;
 END $$;
 INSERT INTO site_settings (key, value) VALUES ('hero_banner', '{}') ON CONFLICT (key) DO NOTHING;

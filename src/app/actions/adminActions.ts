@@ -257,3 +257,52 @@ export async function testTelegramAction(formData: FormData) {
     return { error: err.message };
   }
 }
+
+// ==========================================
+// ZALO WEBHOOK - SETTINGS
+// ==========================================
+import { updateZaloSettings, getZaloSettings } from "@/services/zaloService";
+
+export async function updateZaloAction(formData: FormData) {
+  const settings = {
+    endpoint: formData.get("endpoint") as string || "https://zl.aiphocap.vn/api/webhook/order",
+    api_key: formData.get("api_key") as string,
+    is_active: formData.get("is_active") === "on",
+  };
+  const res = await updateZaloSettings(settings);
+  revalidatePath("/admin/settings");
+  revalidatePath("/");
+  return res;
+}
+
+export async function testZaloAction(formData: FormData) {
+  const apiKey = formData.get("api_key") as string;
+  const endpoint = formData.get("endpoint") as string || "https://zl.aiphocap.vn/api/webhook/order";
+  
+  if (!apiKey) return { error: "Thiếu X-API-Key" };
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-Key": apiKey
+      },
+      body: JSON.stringify({
+        customer: "Bảo Nam Admin Test",
+        product: "Test Zalo Webhook",
+        amount: "500000",
+        phone: "0901234567",
+        note: "Trạng thái: ✅ Cấu hình Zalo BOT thành công!"
+      }),
+    });
+    
+    // Zalo webhook might return errors as text, so don't blindly json() error
+    if (!res.ok) {
+      return { error: `Webhook từ chối kết nối (Mã lỗi: ${res.status})` };
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}
