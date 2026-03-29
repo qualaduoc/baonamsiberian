@@ -3,14 +3,16 @@
 import { useState } from "react";
 import { updateNavbarAction } from "@/app/actions/adminActions";
 import { NavItem } from "@/services/navbarService";
+import { Category } from "@/services/categoryService";
 import { Save, Plus, Trash2, Loader2, GripVertical, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface Props {
   initialNav: NavItem[];
+  categories: Category[];
 }
 
-export default function NavbarEditor({ initialNav }: Props) {
+export default function NavbarEditor({ initialNav, categories = [] }: Props) {
   const [navItems, setNavItems] = useState<NavItem[]>(initialNav);
   const [loading, setLoading] = useState(false);
 
@@ -98,12 +100,25 @@ export default function NavbarEditor({ initialNav }: Props) {
                     placeholder="Tên hiển thị (VD: Cửa Hàng)"
                     className="input !py-2 font-bold"
                   />
-                  <input
-                    value={item.href}
-                    onChange={(e) => updateItem(item.id, "href", e.target.value)}
-                    placeholder="Link đích (VD: /shop)"
-                    className="input !py-2"
-                  />
+                  <div className="relative w-full">
+                    <input
+                      value={item.href}
+                      onChange={(e) => updateItem(item.id, "href", e.target.value)}
+                      placeholder="Link đích (VD: /shop)"
+                      className="input !py-2 !w-full"
+                      list={`links-${item.id}`}
+                    />
+                    <datalist id={`links-${item.id}`}>
+                      <option key="/" value="/">Trang Chủ</option>
+                      <option key="/shop" value="/shop">Tất cả sản phẩm</option>
+                      <option key="/about" value="/about">Về Chúng Tôi</option>
+                      {(categories || []).map((cat) => (
+                        <option key={cat.id} value={`/shop?category=${cat.slug}`}>
+                          Danh Mục: {cat.name}
+                        </option>
+                      ))}
+                    </datalist>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => addSubItem(item.id)} className="text-xs text-primary font-bold hover:underline flex items-center gap-1">
@@ -129,12 +144,25 @@ export default function NavbarEditor({ initialNav }: Props) {
                         placeholder="Tên danh mục con"
                         className="input !py-1.5 text-sm"
                       />
-                      <input
-                        value={child.href}
-                        onChange={(e) => updateSubItem(item.id, child.id, "href", e.target.value)}
-                        placeholder="Link (VD: /shop?category=than-kinh)"
-                        className="input !py-1.5 text-sm"
-                      />
+                      <div className="relative w-full">
+                        <input
+                          value={child.href}
+                          onChange={(e) => updateSubItem(item.id, child.id, "href", e.target.value)}
+                          placeholder="Link (VD: /shop?category=than-kinh)"
+                          className="input !py-1.5 text-sm !w-full"
+                          list={`sub-links-${child.id}`}
+                        />
+                        <datalist id={`sub-links-${child.id}`}>
+                          <option key="/" value="/">Trang Chủ</option>
+                          <option key="/shop" value="/shop">Tất cả sản phẩm</option>
+                          <option key="/about" value="/about">Về Chúng Tôi</option>
+                          {(categories || []).map((cat) => (
+                            <option key={cat.id} value={`/shop?category=${cat.slug}`}>
+                              Danh Mục: {cat.name}
+                            </option>
+                          ))}
+                        </datalist>
+                      </div>
                     </div>
                     <button onClick={() => removeSubItem(item.id, child.id)} className="p-1.5 text-error hover:bg-error/5 rounded-lg opacity-0 group-hover/sub:opacity-100 transition-opacity">
                       <Trash2 className="w-4 h-4" />

@@ -16,15 +16,15 @@ export default function CategoryManager({ categories }: Props) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState({ name: "", slug: "", image_url: "" });
+  const [form, setForm] = useState({ name: "", slug: "" });
 
   const openModal = (cat?: Category) => {
     if (cat) {
       setEditingCategory(cat);
-      setForm({ name: cat.name, slug: cat.slug, image_url: cat.image_url || "" });
+      setForm({ name: cat.name, slug: cat.slug });
     } else {
       setEditingCategory(null);
-      setForm({ name: "", slug: "", image_url: "" });
+      setForm({ name: "", slug: "" });
     }
     setIsModalOpen(true);
   };
@@ -32,7 +32,7 @@ export default function CategoryManager({ categories }: Props) {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingCategory(null);
-    setForm({ name: "", slug: "", image_url: "" });
+    setForm({ name: "", slug: "" });
   };
 
   const generateSlug = (name: string) => {
@@ -51,7 +51,6 @@ export default function CategoryManager({ categories }: Props) {
     const formData = new FormData();
     formData.append("name", form.name);
     formData.append("slug", form.slug);
-    formData.append("image_url", form.image_url);
 
     let res;
     if (editingCategory) {
@@ -120,13 +119,6 @@ export default function CategoryManager({ categories }: Props) {
                 <tr key={cat.id} className="hover:bg-surface-container/20 transition-colors">
                   <td className="p-4 font-bold text-on-surface">
                     <div className="flex items-center gap-3">
-                      {cat.image_url ? (
-                        <div className="w-10 h-10 rounded overflow-hidden shrink-0 border border-outline-variant/20">
-                          <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover" />
-                        </div>
-                      ) : (
-                        <div className="w-10 h-10 rounded shrink-0 bg-surface-container-highest/20 border border-outline-variant/20 flex items-center justify-center text-outline-variant text-xs">No IMG</div>
-                      )}
                       {cat.name}
                     </div>
                   </td>
@@ -192,16 +184,6 @@ export default function CategoryManager({ categories }: Props) {
                   placeholder="VD: xuong-khop"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-bold text-on-surface mb-2">URL Ảnh Minh Họa (Tùy chọn)</label>
-                <input
-                  value={form.image_url}
-                  onChange={(e) => setForm({...form, image_url: e.target.value})}
-                  className="input !w-full"
-                  placeholder="https://..."
-                />
-              </div>
-
               <div className="pt-4 flex justify-end gap-3 mt-6">
                 <button type="button" onClick={closeModal} className="btn-secondary !px-5 !py-2.5 text-sm">Hủy</button>
                 <button type="submit" disabled={loading} className="btn-primary !px-5 !py-2.5 text-sm">

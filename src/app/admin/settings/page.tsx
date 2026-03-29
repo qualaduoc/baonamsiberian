@@ -15,12 +15,13 @@ import { getNavbarSettings } from "@/services/navbarService";
 import { getFooterSettings } from "@/services/footerService";
 import { getPagesSettings } from "@/services/pagesService";
 import { getFeaturedCategories } from "@/services/featuredCategoryService";
+import { getCategories } from "@/services/categoryService";
 import { updateSeoAction } from "@/app/actions/adminActions";
 
 export const revalidate = 0;
 
 export default async function AdminSettingsPage() {
-  const [hero, seo, telegram, zalo, navbar, footer, pages, featuredCats] = await Promise.all([
+  const [hero, seo, telegram, zalo, navbar, footer, pages, featuredCats, categories] = await Promise.all([
     getHeroSettings(), 
     getSeoSettings(),
     getTelegramSettings(),
@@ -28,7 +29,8 @@ export default async function AdminSettingsPage() {
     getNavbarSettings(),
     getFooterSettings(),
     getPagesSettings(),
-    getFeaturedCategories()
+    getFeaturedCategories(),
+    getCategories()
   ]);
 
   return (
@@ -39,7 +41,7 @@ export default async function AdminSettingsPage() {
       <SettingsTabs
         heroContent={<HeroEditor hero={hero} />}
         seoContent={<SeoEditor seo={seo} updateAction={updateSeoAction} />}
-        navbarContent={<NavbarEditor initialNav={navbar} />}
+        navbarContent={<NavbarEditor initialNav={navbar} categories={categories} />}
         footerContent={<FooterEditor initialSettings={footer} />}
         pagesContent={<PagesEditor initialSettings={pages} />}
         telegramContent={<TelegramEditor telegram={telegram} />}
