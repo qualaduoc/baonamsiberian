@@ -362,10 +362,11 @@ import { createCategory, updateCategory, deleteCategory } from "@/services/categ
 export async function adminCreateCategoryAction(formData: FormData) {
   const name = formData.get("name") as string;
   const slug = formData.get("slug") as string;
+  const parentId = formData.get("parentId") as string;
 
   if (!name || !slug) return { error: "Thiếu tên hoặc slug" };
 
-  const res = await createCategory({ name, slug });
+  const res = await createCategory({ name, slug, parent_id: parentId || null });
   if (res.success) {
     revalidatePath("/admin/categories");
     revalidatePath("/admin/products");
@@ -377,10 +378,11 @@ export async function adminCreateCategoryAction(formData: FormData) {
 export async function adminUpdateCategoryAction(id: string, formData: FormData) {
   const name = formData.get("name") as string;
   const slug = formData.get("slug") as string;
+  const parentId = formData.get("parentId") as string;
 
   if (!name || !slug) return { error: "Thiếu tên hoặc slug" };
 
-  const res = await updateCategory(id, { name, slug });
+  const res = await updateCategory(id, { name, slug, parent_id: parentId || null });
   if (res.success) {
     revalidatePath("/admin/categories");
     revalidatePath("/admin/products");

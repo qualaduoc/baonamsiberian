@@ -3,14 +3,32 @@ import { ShieldCheck, Brain, Truck, Leaf, ArrowRight } from "lucide-react";
 import { getFeaturedProducts } from "@/services/productService";
 import { getHeroSettings } from "@/services/heroService";
 import { getFeaturedCategories } from "@/services/featuredCategoryService";
+import { getCategories } from "@/services/categoryService";
 import ProductCard from "@/components/product/ProductCard";
 
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [products, hero, featuredCats] = await Promise.all([
-    getFeaturedProducts(), getHeroSettings(), getFeaturedCategories()
+  const [rawProducts, hero, featuredCats, categories] = await Promise.all([
+    getFeaturedProducts(), getHeroSettings(), getFeaturedCategories(), getCategories()
   ]);
+
+  const catMap = new Map();
+  categories.forEach(c => catMap.set(c.id, c));
+
+  const products = rawProducts.map(p => {
+    if (p.category) {
+      const parentCat = p.category.parent_id ? catMap.get(p.category.parent_id) : null;
+      return {
+        ...p,
+        category: {
+          ...p.category,
+          parentName: parentCat ? parentCat.name : undefined
+        }
+      };
+    }
+    return p;
+  });
 
   return (
     <>

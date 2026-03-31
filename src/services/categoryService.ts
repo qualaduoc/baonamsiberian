@@ -4,6 +4,7 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
+  parent_id?: string | null;
   created_at?: string;
 }
 
@@ -24,14 +25,14 @@ export async function getCategories(): Promise<Category[]> {
   }
 }
 
-export async function createCategory(data: { name: string; slug: string }) {
+export async function createCategory(data: { name: string; slug: string; parent_id?: string | null }) {
   const admin = getServiceSupabase();
   const { error } = await admin.from("categories").insert([data]);
   if (error) return { error: error.message };
   return { success: true };
 }
 
-export async function updateCategory(id: string, data: { name: string; slug: string }) {
+export async function updateCategory(id: string, data: { name: string; slug: string; parent_id?: string | null }) {
   const admin = getServiceSupabase();
   const { error } = await admin.from("categories").update(data).eq("id", id);
   if (error) return { error: error.message };

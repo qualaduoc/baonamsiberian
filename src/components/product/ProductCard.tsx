@@ -13,7 +13,7 @@ interface ProductCardProps {
     image_url: string | null;
     short_description?: string | null;
     badge?: string | null;
-    category?: { name: string } | null;
+    category?: { name: string; parentName?: string } | null;
     variants?: { id: string; name: string; price: number; original_price?: number | null; stock: number }[];
   };
 }
@@ -27,7 +27,10 @@ export default function ProductCard({ product }: ProductCardProps) {
     : 0;
   const hasDiscount = originalPrice > 0 && originalPrice > lowestPrice;
   const discountPct = hasDiscount ? Math.round((1 - lowestPrice / originalPrice) * 100) : 0;
-  const categoryName = product.category?.name || "Thực phẩm chức năng";
+  let categoryName = product.category?.name || "Thực phẩm chức năng";
+  if (product.category?.parentName) {
+    categoryName = `${product.category.parentName} > ${categoryName}`;
+  }
   const fmtVND = (n: number) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n);
 
   const firstVariant = variants[0];

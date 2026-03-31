@@ -16,6 +16,13 @@ export default function NavbarEditor({ initialNav, categories = [] }: Props) {
   const [navItems, setNavItems] = useState<NavItem[]>(initialNav);
   const [loading, setLoading] = useState(false);
 
+  const buildTree = (cats: Category[], parentId: string | null = null, depth: number = 0): (Category & { depth: number })[] => {
+    return cats
+      .filter((c) => (c.parent_id || null) === parentId)
+      .flatMap((c) => [{ ...c, depth }, ...buildTree(cats, c.id, depth + 1)]);
+  };
+  const treeCategories = buildTree(categories || []);
+
   const addMenuItem = () => {
     setNavItems([...navItems, { id: Date.now().toString(), label: "", href: "/" }]);
   };
@@ -112,9 +119,9 @@ export default function NavbarEditor({ initialNav, categories = [] }: Props) {
                       <option key="/" value="/">Trang Chủ</option>
                       <option key="/shop" value="/shop">Tất cả sản phẩm</option>
                       <option key="/about" value="/about">Về Chúng Tôi</option>
-                      {(categories || []).map((cat) => (
+                      {treeCategories.map((cat) => (
                         <option key={cat.id} value={`/shop?category=${cat.slug}`}>
-                          Danh Mục: {cat.name}
+                          {"\u00A0\u00A0".repeat(cat.depth)}{cat.depth > 0 ? "↳ " : "📖 "}{cat.name}
                         </option>
                       ))}
                     </datalist>
@@ -156,9 +163,9 @@ export default function NavbarEditor({ initialNav, categories = [] }: Props) {
                           <option key="/" value="/">Trang Chủ</option>
                           <option key="/shop" value="/shop">Tất cả sản phẩm</option>
                           <option key="/about" value="/about">Về Chúng Tôi</option>
-                          {(categories || []).map((cat) => (
+                          {treeCategories.map((cat) => (
                             <option key={cat.id} value={`/shop?category=${cat.slug}`}>
-                              Danh Mục: {cat.name}
+                              {"\u00A0\u00A0".repeat(cat.depth)}{cat.depth > 0 ? "↳ " : "📖 "}{cat.name}
                             </option>
                           ))}
                         </datalist>

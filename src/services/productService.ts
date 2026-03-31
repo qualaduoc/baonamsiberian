@@ -4,6 +4,7 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
+  parent_id?: string | null;
 }
 
 export interface ProductVariant {
@@ -29,7 +30,7 @@ export interface Product {
 
 const PRODUCT_SELECT = `
   *,
-  category:categories(id, name, slug),
+  category:categories(id, name, slug, parent_id),
   variants:product_variants(*)
 `;
 

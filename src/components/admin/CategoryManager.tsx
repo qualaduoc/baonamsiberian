@@ -16,15 +16,22 @@ export default function CategoryManager({ categories }: Props) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState({ name: "", slug: "" });
+  const [form, setForm] = useState({ name: "", slug: "", parent_id: "" });
+
+  const buildTree = (cats: Category[], parentId: string | null = null, depth: number = 0): (Category & { depth: number })[] => {
+    return cats
+      .filter(c => (c.parent_id || null) === parentId)
+      .flatMap(c => [{ ...c, depth }, ...buildTree(cats, c.id, depth + 1)]);
+  };
+  const treeCategories = buildTree(categories);
 
   const openModal = (cat?: Category) => {
     if (cat) {
       setEditingCategory(cat);
-      setForm({ name: cat.name, slug: cat.slug });
+      setForm({ name: cat.name, slug: cat.slug, parent_id: cat.parent_id || "" });
     } else {
       setEditingCategory(null);
-      setForm({ name: "", slug: "" });
+      setForm({ name: "", slug: "", parent_id: "" });
     }
     setIsModalOpen(true);
   };
@@ -32,7 +39,7 @@ export default function CategoryManager({ categories }: Props) {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingCategory(null);
-    setForm({ name: "", slug: "" });
+    setForm({ name: "", slug: "", parent_id: "" });
   };
 
   const generateSlug = (name: string) => {
@@ -51,6 +58,7 @@ export default function CategoryManager({ categories }: Props) {
     const formData = new FormData();
     formData.append("name", form.name);
     formData.append("slug", form.slug);
+    formData.append("parentId", form.parent_id);
 
     let res;
     if (editingCategory) {
@@ -108,18 +116,31 @@ export default function CategoryManager({ categories }: Props) {
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/10">
-            {categories.length === 0 ? (
+            {treeCategories.length === 0 ? (
               <tr>
                 <td colSpan={3} className="p-8 text-center text-outline-variant">
                   Chưa có danh mục nào. Hãy thêm danh mục đầu tiên!
                 </td>
               </tr>
             ) : (
-              categories.map((cat) => (
+              treeCategories.map((cat) => (
                 <tr key={cat.id} className="hover:bg-surface-container/20 transition-colors">
                   <td className="p-4 font-bold text-on-surface">
-                    <div className="flex items-center gap-3">
-                      {cat.name}
+                    <div className="flex items-start">
+                      {cat.depth > 0 ? (
+                         <div className="flex gap-3 items-center" style={{ paddingLeft: `${cat.depth * 24}px` }}>
+                           <div className="w-4 h-6 border-b-2 border-l-2 border-outline-variant/40 rounded-bl-lg mb-2 opacity-75"></div>
+                           <span className="font-medium text-on-surface-variant flex items-center gap-2">
+                              {cat.name}
+                              <span className="text-[10px] bg-surface-container font-mono px-1.5 py-0.5 rounded text-outline">Con</span>
+                           </span>
+                         </div>
+                      ) : (
+                         <div className="flex items-center gap-2">
+                           <div className="w-2 h-2 rounded-full bg-primary shadow-sm"></div>
+                           <span className="text-primary font-black tracking-wide">{cat.name}</span>
+                         </div>
+                      )}
                     </div>
                   </td>
                   <td className="p-4">
@@ -183,6 +204,21 @@ export default function CategoryManager({ categories }: Props) {
                   className="input !w-full text-outline"
                   placeholder="VD: xuong-khop"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-on-surface mb-2">Thuộc Cấp Danh Mục (Tuỳ chọn)</label>
+                <select
+                  value={form.parent_id}
+                  onChange={(e) => setForm({...form, parent_id: e.target.value})}
+                  className="input !w-full"
+                >
+                  <option value="">— Gốc (Không có danh mục cha) —</option>
+                  {treeCategories.filter(c => c.id !== editingCategory?.id).map(c => (
+                    <option key={c.id} value={c.id}>
+                      {"\u00A0\u00A0".repeat(c.depth)}{c.depth > 0 ? "↳ " : ""}{c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="pt-4 flex justify-end gap-3 mt-6">
                 <button type="button" onClick={closeModal} className="btn-secondary !px-5 !py-2.5 text-sm">Hủy</button>
