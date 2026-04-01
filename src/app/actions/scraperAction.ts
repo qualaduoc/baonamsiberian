@@ -4,8 +4,8 @@ import * as cheerio from 'cheerio';
 
 export async function scrapeSiberianAction(url: string) {
   try {
-    if (!url || !url.includes('siberianhealth.com')) {
-      return { error: 'Link không hợp lệ! Vui lòng nhập link sản phẩm từ vn.siberianhealth.com.' };
+    if (!url || (!url.includes('siberianhealth.com') && !url.includes('amway.com.vn') && !url.includes('herbalife.com'))) {
+      return { error: 'Link không hợp lệ! Vui lòng nhập link sản phẩm từ Siberian Health, Amway hoặc Herbalife.' };
     }
 
     const res = await fetch(url, {
@@ -25,95 +25,141 @@ export async function scrapeSiberianAction(url: string) {
     const html = await res.text();
     const $ = cheerio.load(html);
 
-    // Bóc tách Tiêu đề sản phẩm
-    let title = $('h1').first().text().trim() || $('.b-product__title').text().trim();
-    if (!title) {
-      // Fallback cho SEO title nếu không tìm thấy DOM h1 (do layout JS render)
-      title = $('title').text().replace(' - Mua trên trang web chính thức của Siberian Wellness', '').trim();
-    }
-    
-    // Bóc tách Giá bán (Siberian Health hay để class giá ở cục <strong class="price" / .b-product-price)
-    // Hoặc meta property
-    let priceMeta = $('meta[property="product:price:amount"]').attr('content');
-    let priceText = priceMeta 
-      || $('.b-product-price__regular').text().trim() 
-      || $('.price').first().text().trim() 
-      || $('.b-price').first().text().trim();
-      
-    // Trích xuất đúng số tiền (loại bỏ chữ ₫ hoặc whitespace)
-    priceText = priceText.replace(/\D/g, ''); 
-    const price = priceText ? parseInt(priceText, 10) : 0;
+    // Bóc tách tuỳ theo domain
+    let finalTitle = '';
+    let finalPrice = 0;
+    let finalImageUrl = '';
+    let finalDescription = '';
 
-    // Bóc tách Mảng Hình ảnh (Lấy tấm đầu tiên)
-    let imageUrl = $('meta[property="og:image"]').attr('content') 
-      || $('.b-product-image__img').attr('src') || $('img.product-image').attr('src');
-    
-    if (imageUrl && !imageUrl.startsWith('http')) {
-      // Bù domain nếu bị thiếu
-      if (imageUrl.startsWith('//')) imageUrl = 'https:' + imageUrl;
-      else imageUrl = 'https://vn.siberianhealth.com' + imageUrl;
-    }
-
-    // Bóc tách Nhanh Đoạn Mô tả dài
-    let description = '';
-    
-    // Cố gắng tìm các class chứa thông tin chi tiết thường gặp của Siberian Health
-    const possibleSelectors = [
-      '#product-about',
-      '.product-about', 
-      '.b-product-details__tab-content',
-      '#detail-tab',
-      '.product-info',
-      '.b-product__details form',
-      '.tab-content',
-      '.tab-pane.active',
-      '.b-product-description'
-    ];
-
-    for (const selector of possibleSelectors) {
-      const text = $(selector).text().trim().replace(/\s+/g, ' ');
-      if (text.length > description.length) {
-        description = text;
+    if (url.includes('herbalife.com')) {
+      const nextDataNode = $('#__NEXT_DATA__').html();
+      if (nextDataNode) {
+        try {
+          const nextData = JSON.parse(nextDataNode);
+          const pd = nextData?.props?.pageProps?.productDetails?.productData;
+          if (pd) {
+            finalTitle = pd.variant?.productName || pd.name?.['vi-VN'] || pd.name || '';
+            finalImageUrl = pd.defaultImage?._publishUrl 
+                         || pd.imageGallery?.[0]?._publishUrl 
+                         || pd.image?._publishUrl 
+                         || pd.variant?.image?._publishUrl 
+                         || pd.overviewImage?._publishUrl 
+                         || '';
+            if (pd.productTabs && pd.productTabs.length > 0) {
+               let rawDesc = pd.productTabs[0]?.description?.html || '';
+               rawDesc = rawDesc.replace(/<[^>]*>?/gm, '\n'); // Remove HTML
+               finalDescription = rawDesc.replace(/\n\s*\n/g, '\n').trim();
+            }
+          }
+        } catch (e) {
+          console.error("Herbalife JSON parse err", e);
+        }
       }
-    }
-
-    // Nếu vẫn trống, thử tìm thẻ heading có chứa chữ 'Miêu tả' hoặc 'description'
-    if (description.length < 50) {
-      const $miengTaHeading = $('h2, h3, h4').filter(function() {
-        return $(this).text().trim().toLowerCase().includes('miêu tả');
-      });
-      if ($miengTaHeading.length > 0) {
-        // Lấy toàn bộ text của cha
-        description = $miengTaHeading.parent().text().trim().replace(/\s+/g, ' ');
-      }
-    }
-
-    // Nếu vẫn không có, dùng meta description tạm
-    if (description.length < 50) {
-      description = $('meta[name="description"]').attr('content') || '';
-    }
+      if (!finalTitle) finalTitle = $('meta[property="og:title"]').attr('content') || $('title').text();
+      if (!finalImageUrl) finalImageUrl = $('meta[property="og:image"]').attr('content') || '';
       
-    // Lọc bỏ bớt các khoảng trắng và \n liên tiếp, nhưng giữ lại ngắt dòng
-    // Trong HTML cheerio `.text()` nó sẽ nối liền dính chữ nếu không cẩn thận,
-    // ta nên map qua các thẻ p, li để nối bằng newline.
+      // Quét thủ công link ảnh Herbalife trong toàn bộ mã HTML phòng trường hợp cấu trúc thay đổi (Fallback Regex)
+      if (!finalImageUrl) {
+        const fallbackImg = html.match(/(?:"|')([^"']*(?:market-reusable-assets|images\/canister|assets)[^"']*\.(?:png|jpe?g|webp)[^"']*)(?:"|')/i);
+        if (fallbackImg) {
+          finalImageUrl = fallbackImg[1];
+        }
+      }
+      if (!finalDescription) finalDescription = $('meta[name="description"]').attr('content') || '';
+      
+      // Lấy title sạch cho herbalife (bỏ bớt suffix)
+      finalTitle = finalTitle.replace(/\|.*/, '').trim();
 
-    // Format lại mô tả nếu quá dài lấy 2000 chữ (Không lấy 500 nữa vì nội dung HDSD thường dài)
-    if (description.length > 2500) {
-      description = description.substring(0, 2500) + '...';
+    } else if (url.includes('amway.com.vn')) {
+      finalTitle = $('meta[property="og:title"]').attr('content') || $('title').text();
+      finalImageUrl = $('meta[property="og:image"]').attr('content') || '';
+      finalDescription = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || '';
+      
+      // Loại bỏ - Mua trực tuyến hoặc các hậu tố tương tự
+      finalTitle = finalTitle.replace(/\|.*/, '').trim();
+      
+    } else {
+      // SIBERIAN HEALTH (Logic cũ)
+      let title = $('h1').first().text().trim() || $('.b-product__title').text().trim();
+      if (!title) {
+        title = $('title').text().replace(' - Mua trên trang web chính thức của Siberian Wellness', '').trim();
+      }
+      
+      let priceMeta = $('meta[property="product:price:amount"]').attr('content');
+      let priceText = priceMeta 
+        || $('.b-product-price__regular').text().trim() 
+        || $('.price').first().text().trim() 
+        || $('.b-price').first().text().trim();
+        
+      priceText = priceText.replace(/\D/g, ''); 
+      finalPrice = priceText ? parseInt(priceText, 10) : 0;
+
+      let imageUrl = $('meta[property="og:image"]').attr('content') 
+        || $('.b-product-image__img').attr('src') || $('img.product-image').attr('src');
+      
+      if (imageUrl && !imageUrl.startsWith('http')) {
+        if (imageUrl.startsWith('//')) imageUrl = 'https:' + imageUrl;
+        else imageUrl = 'https://vn.siberianhealth.com' + imageUrl;
+      }
+      finalImageUrl = imageUrl || '';
+
+      let description = '';
+      const possibleSelectors = [
+        '#product-about', '.product-about', '.b-product-details__tab-content',
+        '#detail-tab', '.product-info', '.b-product__details form',
+        '.tab-content', '.tab-pane.active', '.b-product-description'
+      ];
+      for (const selector of possibleSelectors) {
+        const text = $(selector).text().trim().replace(/\s+/g, ' ');
+        if (text.length > description.length) description = text;
+      }
+
+      if (description.length < 50) {
+        const $miengTaHeading = $('h2, h3, h4').filter(function() { return $(this).text().trim().toLowerCase().includes('miêu tả'); });
+        if ($miengTaHeading.length > 0) description = $miengTaHeading.parent().text().trim().replace(/\s+/g, ' ');
+      }
+      if (description.length < 50) description = $('meta[name="description"]').attr('content') || '';
+      
+      finalTitle = title;
+      finalDescription = description;
     }
 
-    // Kiểm tra tính toàn vẹn cơ bản
-    if (!title) {
+    // Xử lý chunk chung
+    if (finalDescription.length > 2500) {
+      finalDescription = finalDescription.substring(0, 2500) + '...';
+    }
+
+    // Tối ưu Hình ảnh chung
+    if (finalImageUrl) {
+      // Bổ sung domain nếu hình ảnh là link tương đối (Của herbalife, amway, siberian)
+      if (!finalImageUrl.startsWith('http')) {
+        if (finalImageUrl.startsWith('//')) {
+          finalImageUrl = 'https:' + finalImageUrl;
+        } else {
+          try {
+            const domainObj = new URL(url);
+            finalImageUrl = domainObj.origin + (finalImageUrl.startsWith('/') ? '' : '/') + finalImageUrl;
+          } catch (e) {
+            console.error("Lỗi parse URL domain", e);
+          }
+        }
+      }
+      
+      // Tối ưu link hình ảnh (Loại bỏ các parameter thừa như size ảnh, đuôi .png:pdp... hay .jpg?...)
+      finalImageUrl = finalImageUrl.replace(/(\.(png|jpe?g|gif|webp))[:?].*$/i, '$1');
+    }
+
+    if (!finalTitle) {
         return { error: 'Lấy dữ liệu thất bại, có thể Website đã đổi cấu trúc code, chức năng bóc tách không hiểu.' };
     }
 
     return {
       success: true,
       data: {
-        name: title,
-        price,
-        image_url: imageUrl || '',
-        short_description: description,
+        name: finalTitle,
+        price: finalPrice,
+        image_url: finalImageUrl || '',
+        short_description: finalDescription,
       }
     };
   } catch (err: any) {

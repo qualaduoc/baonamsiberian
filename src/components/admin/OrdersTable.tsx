@@ -165,28 +165,37 @@ export default function OrdersTable({ orders }: Props) {
             {/* Items */}
             <div className="flex flex-col gap-3 mb-4 mt-2">
               {order.order_items.map((oi) => {
-                const imgUrl = oi.variant?.product?.image_url;
+                const imgUrl = oi.snapshot_image_url || oi.variant?.product?.image_url;
+                const pName = oi.snapshot_product_name || oi.variant?.product?.name;
+                const vName = oi.snapshot_variant_name || oi.variant?.name;
                 return (
                   <div key={oi.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-sm bg-surface-container-lowest border border-outline-variant/10 px-4 py-3 rounded-xl gap-3">
                     <div className="flex items-center gap-4 flex-1">
                       {imgUrl ? (
                         <div 
-                          className="w-12 h-12 rounded-lg border border-outline-variant/20 overflow-hidden cursor-zoom-in shrink-0 bg-white"
+                          className="relative w-24 h-24 rounded-xl border border-outline-variant/20 overflow-hidden cursor-zoom-in shrink-0 bg-white group/zoom shadow-sm"
                           onClick={() => setZoomImg(imgUrl)}
+                          title="Bấm để phóng to"
                         >
-                          <img src={imgUrl} alt="Product" className="w-full h-full object-contain" />
+                          <img src={imgUrl} alt="Product" className="w-full h-full object-cover group-hover/zoom:scale-105 transition-transform duration-300" />
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover/zoom:opacity-100 transition-opacity">
+                            <span className="bg-white/90 text-primary text-[10px] font-bold px-2 py-1 rounded-full shadow-lg">🔍 Phóng to</span>
+                          </div>
                         </div>
                       ) : (
-                        <div className="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0">
-                          <Package className="w-5 h-5 text-on-surface-variant/50" />
+                        <div className="w-24 h-24 rounded-xl bg-error/5 border-2 border-dashed border-error/20 flex flex-col items-center justify-center shrink-0">
+                          <Package className="w-5 h-5 text-error/40 mb-1" />
+                          <span className="text-[9px] text-error/60 font-bold uppercase">Mất Ảnh</span>
                         </div>
                       )}
                       
-                      <span className="font-bold text-on-surface leading-tight">
-                        {oi.variant?.product?.name || "Sản phẩm"} 
-                        <span className="text-on-surface-variant font-medium block sm:inline sm:ml-2">
-                          — {oi.variant?.name || "Biến thể"}
-                        </span>
+                      <span className="font-bold text-on-surface text-base leading-tight">
+                        {pName || <span className="text-error/80 italic font-medium text-sm">⛔ Sản phẩm cũ đã bị thu hồi/gỡ bỏ</span>} 
+                        {vName && (
+                          <span className="text-on-surface-variant font-medium block mt-1 text-sm bg-surface-container-high px-2 py-1 rounded-md inline-block">
+                             {vName}
+                          </span>
+                        )}
                       </span>
                     </div>
 
@@ -223,24 +232,30 @@ export default function OrdersTable({ orders }: Props) {
           </div>
         );
       })}
-      {/* Image Zoom Modal */}
+      {/* Image Zoom Modal Cao Cấp */}
       {zoomImg && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 cursor-zoom-out"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 cursor-zoom-out animate-in fade-in"
           onClick={() => setZoomImg(null)}
         >
-          <img 
-            src={zoomImg} 
-            alt="Zoomed Product" 
-            className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl bg-white p-2 border-4 border-white"
-            onClick={(e) => e.stopPropagation()} 
-          />
-          <button 
-            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors backdrop-blur-md"
-            onClick={() => setZoomImg(null)}
-          >
-            <XCircle className="w-8 h-8" />
-          </button>
+          <div className="relative max-w-5xl w-full h-[85vh] flex items-center justify-center">
+            <img 
+              src={zoomImg} 
+              alt="Zoomed Product" 
+              className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl bg-white p-4 border-4 border-white/20 animate-in zoom-in-95 duration-300"
+              onClick={(e) => e.stopPropagation()} 
+            />
+            <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur font-bold text-white px-6 py-2 rounded-full shadow-lg tracking-wide border border-white/10 pointer-events-none">
+               Bấm ra ngoài để Đóng
+            </div>
+            <button 
+              className="absolute top-0 right-0 md:-right-12 md:top-0 p-3 bg-white hover:bg-error hover:text-white text-on-surface rounded-full shadow-2xl transition-all z-[110]"
+              onClick={() => setZoomImg(null)}
+              title="Đóng (Esc)"
+            >
+              <XCircle className="w-8 h-8" />
+            </button>
+          </div>
         </div>
       )}
     </div>

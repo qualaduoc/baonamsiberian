@@ -13,6 +13,9 @@ export interface OrderWithItems {
     id: string;
     quantity: number;
     price: number;
+    snapshot_product_name: string | null;
+    snapshot_variant_name: string | null;
+    snapshot_image_url: string | null;
     variant: { id: string; name: string; product: { name: string; image_url: string | null } | null } | null;
   }[];
 }
@@ -32,7 +35,7 @@ export async function getAllOrders(): Promise<OrderWithItems[]> {
   const supabase = getServiceSupabase();
   const { data, error } = await supabase
     .from("orders")
-    .select(`*, order_items(id, quantity, price, variant:product_variants(id, name, product:products(name, image_url)))`)
+    .select(`*, order_items(id, quantity, price, snapshot_product_name, snapshot_variant_name, snapshot_image_url, variant:product_variants(id, name, product:products(name, image_url)))`)
     .order("created_at", { ascending: false });
 
   if (error) { console.error("Fetch orders:", error); return []; }

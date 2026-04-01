@@ -70,7 +70,7 @@ export async function processCheckout(formData: FormData, itemsText: string) {
         const variantIds = items.map(i => i.variantId);
         const { data: variants, error: variantErr } = await supabase
           .from("product_variants")
-          .select("id, price, stock, name, product_id, products (name)")
+          .select("id, price, stock, name, product_id, products (name, image_url)")
           .in("id", variantIds);
 
         if (variantErr || !variants) {
@@ -86,7 +86,7 @@ export async function processCheckout(formData: FormData, itemsText: string) {
         // Kiểm tra tồn kho và tính tổng tiền
         for (const item of items) {
           const dbVariant = variants.find(v => v.id === item.variantId);
-          if (!dbVariant) return { error: `Sản phẩm bị lỗi hoặc đã xoá.` };
+          if (!dbVariant) return { error: `Giỏ hàng chứa sản phẩm đã ngừng kinh doanh hoặc thay đổi quy cách. Quý khách vui lòng xoá Giỏ hàng cũ và chọn lại sản phẩm để tiếp tục!` };
           
           if (item.quantity > dbVariant.stock) {
             return { error: `Sản phẩm ${dbVariant.name} chỉ còn ${dbVariant.stock} hộp trong kho.` };
@@ -94,17 +94,21 @@ export async function processCheckout(formData: FormData, itemsText: string) {
 
           totalAmount += dbVariant.price * item.quantity;
 
+          const productName = (dbVariant.products as any)?.name || "Sản phẩm";
+          const variantName = dbVariant.name === "Mặc định" ? "Mặc định" : dbVariant.name;
+          const imageUrl = (dbVariant.products as any)?.image_url || null;
+
           orderItemsRecord.push({
              variant_id: item.variantId,
              quantity: item.quantity,
-             price: dbVariant.price // Lấy giá THẬT của Database
+             price: dbVariant.price, // Lấy giá THẬT của Database
+             snapshot_product_name: productName,
+             snapshot_variant_name: variantName,
+             snapshot_image_url: imageUrl
           });
-
-          const productName = (dbVariant.products as any)?.name || "Sản phẩm";
-          const variantName = dbVariant.name === "Mặc định" ? "" : ` (${dbVariant.name})`;
           
           telegramItems.push({
-             name: `${productName}${variantName}`,
+             name: `${productName}${variantName !== "Mặc định" ? ` (${variantName})` : ""}`,
              quantity: item.quantity,
              price: dbVariant.price
           });
