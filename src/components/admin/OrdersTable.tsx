@@ -1,8 +1,8 @@
 "use client";
 
-import { changeOrderStatusAction } from "@/app/actions/adminActions";
+import { changeOrderStatusAction, deleteOrderAction } from "@/app/actions/adminActions";
 import { OrderWithItems } from "@/services/adminService";
-import { Phone, MapPin, Clock, CheckCircle2, XCircle, Loader2, Package, Printer } from "lucide-react";
+import { Phone, MapPin, Clock, CheckCircle2, XCircle, Loader2, Package, Printer, Trash2 } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -35,6 +35,18 @@ export default function OrdersTable({ orders }: Props) {
       toast.error(res.error);
     } else {
       toast.success(`Đã chuyển trạng thái đơn hàng!`);
+    }
+    setLoadingId(null);
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa vĩnh viễn đơn hàng này? Hành động này không thể hoàn tác.")) return;
+    setLoadingId(orderId);
+    const res = await deleteOrderAction(orderId);
+    if (res?.error) {
+      toast.error(res.error);
+    } else {
+      toast.success("Đã xóa đơn hàng thành công!");
     }
     setLoadingId(null);
   };
@@ -227,6 +239,14 @@ export default function OrdersTable({ orders }: Props) {
                     </button>
                   );
                 })}
+                <button
+                  disabled={isLoading}
+                  onClick={() => handleDeleteOrder(order.id)}
+                  className="px-4 py-2 rounded-xl text-sm font-bold border border-rose-200 text-rose-500 hover:bg-rose-500 hover:text-white transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  title="Xóa đơn hàng"
+                >
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Trash2 className="w-4 h-4" /> Xóa</>}
+                </button>
               </div>
             </div>
           </div>

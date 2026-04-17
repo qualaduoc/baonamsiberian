@@ -59,6 +59,16 @@ export async function updateOrderStatus(orderId: string, status: string) {
   return { success: true };
 }
 
+export async function deleteOrder(orderId: string) {
+  const supabase = getServiceSupabase();
+  // Supabase cascades deletes if foreign key references are setup correctly
+  // Otherwise we might need to delete order_items first.
+  // Assuming cascade delete is enabled for order_items.
+  const { error } = await supabase.from("orders").delete().eq("id", orderId);
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function getDashboardStats(): Promise<DashboardStats> {
   const supabase = getServiceSupabase();
   const now = new Date();

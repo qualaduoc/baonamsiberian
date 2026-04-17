@@ -32,6 +32,14 @@ export async function changeOrderStatusAction(orderId: string, newStatus: string
   return res;
 }
 
+export async function deleteOrderAction(orderId: string) {
+  const { deleteOrder } = await import("@/services/adminService");
+  const res = await deleteOrder(orderId);
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+  return res;
+}
+
 // ========== SẢN PHẨM ==========
 export async function createProductAction(formData: FormData) {
   try {
