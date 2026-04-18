@@ -64,6 +64,7 @@ export async function createProductAction(formData: FormData) {
         description: description || null,
         category_id: categoryId || null,
         image_url: imageUrl || null,
+        order_code: "BN" + Math.floor(100000 + Math.random() * 900000).toString(),
       })
       .select("id")
       .single();
@@ -138,6 +139,30 @@ export async function updateProductAction(formData: FormData) {
     revalidatePath("/");
     return { success: true };
   } catch { return { error: "Lỗi Server khi cập nhật." }; }
+}
+
+export async function generateInitialOrderCodesAction() {
+  try {
+    const supabase = getServiceSupabase();
+    // Lấy các sản phẩm chưa có order_code
+    const { data: products, error: fetchErr } = await supabase
+      .from("products")
+      .select("id")
+      .is("order_code", null);
+      
+    if (fetchErr) return { error: fetchErr.message };
+    if (!products || products.length === 0) return { success: true, message: "Tất cả sản phẩm đã có mã đơn hàng." };
+
+    let count = 0;
+    for (const p of products) {
+      const orderCode = "BN" + Math.floor(100000 + Math.random() * 900000).toString();
+      await supabase.from("products").update({ order_code: orderCode }).eq("id", p.id);
+      count++;
+    }
+    
+    revalidatePath("/admin/products");
+    return { success: true, message: `Đã tự động tạo mã đơn cho ${count} sản phẩm.` };
+  } catch { return { error: "Lỗi Server khi cập nhật mã đơn." }; }
 }
 
 export async function deleteProductAction(productId: string) {

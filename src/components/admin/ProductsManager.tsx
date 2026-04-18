@@ -14,7 +14,7 @@ import { toSlug } from "@/utils/toSlug";
 
 interface Category { id: string; name: string; slug: string; parent_id?: string | null }
 interface Variant { id: string; name: string; price: number; original_price: number | null; stock: number }
-interface Product { id: string; name: string; slug: string; description: string | null; short_description: string | null; image_url: string | null; badge: string | null; is_active: boolean; category: Category | null; variants: Variant[] }
+interface Product { id: string; name: string; slug: string; description: string | null; short_description: string | null; image_url: string | null; badge: string | null; order_code: string | null; is_active: boolean; category: Category | null; variants: Variant[] }
 
 interface Props { products: Product[]; categories: Category[] }
 
@@ -296,7 +296,10 @@ export default function ProductsManager({ products, categories }: Props) {
                                 {!p.is_active && <span className="ml-2 text-[9px] bg-error/10 text-error px-1.5 py-0.5 rounded font-black tracking-widest uppercase">Ẩn</span>}
                                 {p.badge && <span className="ml-2 text-[9px] bg-secondary/10 text-secondary px-1.5 py-0.5 rounded border border-secondary/20">{p.badge}</span>}
                               </div>
-                              <div className="text-[11px] text-on-surface-variant font-mono opacity-60">/{p.slug}</div>
+                              <div className="flex items-center gap-2 mt-1">
+                                {p.order_code && <span className="text-[10px] font-mono bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.5 rounded font-bold">{p.order_code}</span>}
+                                <span className="text-[11px] text-on-surface-variant font-mono opacity-60 line-clamp-1">/{p.slug}</span>
+                              </div>
                             </td>
                             {/* Cột 3: Danh mục */}
                             <td className="p-3 align-top">

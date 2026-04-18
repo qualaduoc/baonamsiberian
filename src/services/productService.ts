@@ -23,6 +23,7 @@ export interface Product {
   short_description: string | null;
   image_url: string | null;
   badge: string | null;
+  order_code: string | null;
   is_active: boolean;
   category: Category | null;
   variants: ProductVariant[];
