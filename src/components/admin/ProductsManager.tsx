@@ -37,6 +37,8 @@ export default function ProductsManager({ products, categories }: Props) {
   const [scrapedOriginalPrice, setScrapedOriginalPrice] = useState("");
   const [scrapedImage, setScrapedImage] = useState("");
   const [scrapedDesc, setScrapedDesc] = useState("");
+  const [scrapedOrderCode, setScrapedOrderCode] = useState("");
+  const [scrapedVariantName, setScrapedVariantName] = useState("Mặc định");
 
   const fmtVND = (n: number) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n);
 
@@ -82,6 +84,8 @@ export default function ProductsManager({ products, categories }: Props) {
       setScrapedOriginalPrice(res.data.price?.toString() || "");
       setScrapedImage(res.data.image_url || "");
       setScrapedDesc(res.data.short_description || "");
+      setScrapedOrderCode(res.data.order_code || "");
+      if (res.data.variant_name) setScrapedVariantName(res.data.variant_name);
       setScrapeUrl(""); // Clear
     }
   };
@@ -126,7 +130,7 @@ export default function ProductsManager({ products, categories }: Props) {
           </div>
 
           <form onSubmit={(e) => handleAction(createProductAction, e, "Tạo sản phẩm thành công!", () => { 
-            setShowNew(false); setNewProductName(""); setNewProductSlug(""); setScrapedOriginalPrice(""); setScrapedImage(""); setScrapedDesc(""); 
+            setShowNew(false); setNewProductName(""); setNewProductSlug(""); setScrapedOriginalPrice(""); setScrapedImage(""); setScrapedDesc(""); setScrapedOrderCode(""); setScrapedVariantName("Mặc định");
           })}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <input
@@ -146,19 +150,20 @@ export default function ProductsManager({ products, categories }: Props) {
               />
             </div>
 
-            {/* GIÁ & KHO — Nhập ngay khi tạo SP */}
+            {/* GIÁ, KHO & MÃ — Nhập ngay khi tạo SP */}
             <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 mb-4">
-              <h4 className="font-bold text-sm text-primary mb-3 uppercase tracking-wider">💰 Thiết Lập Giá Bán</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <h4 className="font-bold text-sm text-primary mb-3 uppercase tracking-wider">💰 Thiết Lập Bán Hàng</h4>
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                 <input 
                   name="price" type="number" required placeholder="Giá bán *" className="input !py-2" 
                 />
                 <input 
-                  name="originalPrice" type="number" placeholder="Giá gốc (Gạch ngang)" className="input !py-2" 
+                  name="originalPrice" type="number" placeholder="Giá gốc (Gạch bỏ)" className="input !py-2" 
                   value={scrapedOriginalPrice} onChange={e => setScrapedOriginalPrice(e.target.value)}
                 />
                 <input name="stock" type="number" defaultValue={100} placeholder="Tồn kho" className="input !py-2" />
-                <input name="variantName" placeholder="Quy cách (VD: Hộp 30 viên)" className="input !py-2" defaultValue="Mặc định" />
+                <input name="variantName" placeholder="Quy cách" className="input !py-2" value={scrapedVariantName} onChange={e => setScrapedVariantName(e.target.value)} />
+                <input name="orderCode" placeholder="Mã KH (Trống tự tạo)" className="input !py-2 font-mono text-primary text-sm tracking-wider" value={scrapedOrderCode} onChange={e => setScrapedOrderCode(e.target.value)} />
               </div>
             </div>
 
@@ -253,9 +258,10 @@ export default function ProductsManager({ products, categories }: Props) {
                                   </select>
                                   <input name="imageUrl" defaultValue={p.image_url || ""} className="input bg-white" placeholder="URL Ảnh" />
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
                                   <input name="badge" defaultValue={p.badge || ""} className="input bg-white" placeholder="Nhãn (VD: Bán chạy)" />
                                   <input name="short_description" defaultValue={p.short_description || ""} className="input bg-white" placeholder="Mô tả cực ngắn" />
+                                  <input name="orderCode" defaultValue={p.order_code || ""} className="input bg-white font-mono text-primary tracking-wider font-bold" placeholder="Mã (Order Code)" />
                                   <select name="is_active" defaultValue={String(p.is_active)} className="input bg-white">
                                     <option value="true">✅ Đang bán (Hiển thị on Web)</option>
                                     <option value="false">🚫 Ẩn sản phẩm này</option>

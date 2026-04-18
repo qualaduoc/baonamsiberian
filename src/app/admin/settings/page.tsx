@@ -6,7 +6,6 @@ import NavbarEditor from "@/components/admin/NavbarEditor";
 import FooterEditor from "@/components/admin/FooterEditor";
 import PagesEditor from "@/components/admin/PagesEditor";
 import FeaturedCategoriesManager from "@/components/admin/FeaturedCategoriesManager";
-import ProductToolsEditor from "@/components/admin/ProductToolsEditor";
 import SettingsTabs from "@/components/admin/SettingsTabs";
 import { getHeroSettings } from "@/services/heroService";
 import { getSeoSettings } from "@/services/seoService";
@@ -48,7 +47,6 @@ export default async function AdminSettingsPage() {
         telegramContent={<TelegramEditor telegram={telegram} />}
         zaloContent={<ZaloEditor zalo={zalo} />}
         categoriesContent={<FeaturedCategoriesManager initialCategories={featuredCats} />}
-        productToolsContent={<ProductToolsEditor />}
       />
     </div>
   );

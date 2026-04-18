@@ -12,7 +12,6 @@ interface Props {
   navbarContent?: React.ReactNode;
   footerContent?: React.ReactNode;
   pagesContent?: React.ReactNode;
-  productToolsContent?: React.ReactNode;
 }
 
 const TABS = [
@@ -24,12 +23,11 @@ const TABS = [
   { key: "seo", label: "SEO", icon: Search },
   { key: "telegram", label: "Telegram", icon: Send },
   { key: "zalo", label: "Zalo Bot", icon: MessageCircle },
-  { key: "tools", label: "Công Cụ Hệ Thống", icon: Box },
 ] as const;
 
 type Tab = typeof TABS[number]["key"];
 
-export default function SettingsTabs({ heroContent, seoContent, telegramContent, zaloContent, categoriesContent, navbarContent, footerContent, pagesContent, productToolsContent }: Props) {
+export default function SettingsTabs({ heroContent, seoContent, telegramContent, zaloContent, categoriesContent, navbarContent, footerContent, pagesContent }: Props) {
   const [active, setActive] = useState<Tab>("pages");
 
   return (
@@ -69,7 +67,6 @@ export default function SettingsTabs({ heroContent, seoContent, telegramContent,
         {active === "telegram" && telegramContent}
         {active === "zalo" && zaloContent}
         {active === "categories" && categoriesContent}
-        {active === "tools" && productToolsContent}
       </div>
     </div>
   );

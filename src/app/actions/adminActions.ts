@@ -56,6 +56,9 @@ export async function createProductAction(formData: FormData) {
 
     if (!name || !slug) return { error: "Tên và Slug là bắt buộc." };
 
+    const orderCodeInput = formData.get("orderCode") as string;
+    const finalOrderCode = orderCodeInput && orderCodeInput.trim() !== "" ? orderCodeInput.trim() : null;
+
     // Chỉ insert cột đã tồn tại sẵn trong DB
     const { data, error } = await supabase
       .from("products")
@@ -64,7 +67,7 @@ export async function createProductAction(formData: FormData) {
         description: description || null,
         category_id: categoryId || null,
         image_url: imageUrl || null,
-        order_code: "BN" + Math.floor(100000 + Math.random() * 900000).toString(),
+        order_code: finalOrderCode,
       })
       .select("id")
       .single();
@@ -101,6 +104,7 @@ export async function updateProductAction(formData: FormData) {
     const is_active = formData.get("is_active") === "true";
     const badge = formData.get("badge") as string;
     const short_description = formData.get("short_description") as string;
+    const order_code = formData.get("orderCode") as string;
 
     const firstVariantId = formData.get("firstVariantId") as string;
     const priceStr = formData.get("price") as string;
@@ -115,6 +119,7 @@ export async function updateProductAction(formData: FormData) {
         description: description || null,
         category_id: categoryId || null,
         image_url: imageUrl || null,
+        order_code: order_code ? order_code.trim() : null,
         is_active,
         badge: badge || null,
         short_description: short_description || null,
@@ -141,29 +146,7 @@ export async function updateProductAction(formData: FormData) {
   } catch { return { error: "Lỗi Server khi cập nhật." }; }
 }
 
-export async function generateInitialOrderCodesAction() {
-  try {
-    const supabase = getServiceSupabase();
-    // Lấy các sản phẩm chưa có order_code
-    const { data: products, error: fetchErr } = await supabase
-      .from("products")
-      .select("id")
-      .is("order_code", null);
-      
-    if (fetchErr) return { error: fetchErr.message };
-    if (!products || products.length === 0) return { success: true, message: "Tất cả sản phẩm đã có mã đơn hàng." };
 
-    let count = 0;
-    for (const p of products) {
-      const orderCode = "BN" + Math.floor(100000 + Math.random() * 900000).toString();
-      await supabase.from("products").update({ order_code: orderCode }).eq("id", p.id);
-      count++;
-    }
-    
-    revalidatePath("/admin/products");
-    return { success: true, message: `Đã tự động tạo mã đơn cho ${count} sản phẩm.` };
-  } catch { return { error: "Lỗi Server khi cập nhật mã đơn." }; }
-}
 
 export async function deleteProductAction(productId: string) {
   try {

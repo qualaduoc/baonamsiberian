@@ -30,6 +30,8 @@ export async function scrapeSiberianAction(url: string) {
     let finalPrice = 0;
     let finalImageUrl = '';
     let finalDescription = '';
+    let finalOrderCode = '';
+    let finalVariantName = '';
 
     if (url.includes('herbalife.com')) {
       const nextDataNode = $('#__NEXT_DATA__').html();
@@ -120,6 +122,25 @@ export async function scrapeSiberianAction(url: string) {
       }
       if (description.length < 50) description = $('meta[name="description"]').attr('content') || '';
       
+      // Bóc tách Mã SP và Quy cách đóng gói (Siberian Health)
+      $('span, div, p, dt, dd, th, td').each((i, el) => {
+        const text = $(el).text().trim();
+        if (text === 'Mã' && !finalOrderCode) {
+           const code = $(el).next().text().trim();
+           if (code.startsWith('#')) finalOrderCode = code.substring(1);
+           else finalOrderCode = code;
+        }
+        if ((text === 'Quy cách đóng gói' || text === 'Quy cách') && !finalVariantName) {
+           finalVariantName = $(el).next().text().trim();
+        }
+      });
+
+      // Nếu không tìm thấy Mã SP trong text, thử bóc từ URL cuối cùng
+      if (!finalOrderCode) {
+         const codeMatch = url.match(/\/product\/(\d+)/);
+         if (codeMatch) finalOrderCode = codeMatch[1];
+      }
+      
       finalTitle = title;
       finalDescription = description;
     }
@@ -160,6 +181,8 @@ export async function scrapeSiberianAction(url: string) {
         price: finalPrice,
         image_url: finalImageUrl || '',
         short_description: finalDescription,
+        order_code: finalOrderCode || '',
+        variant_name: finalVariantName,
       }
     };
   } catch (err: any) {
