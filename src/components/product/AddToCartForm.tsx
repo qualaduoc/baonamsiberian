@@ -35,6 +35,7 @@ export default function AddToCartForm({ product }: Props) {
       quantity,
       stock: selectedVariant.stock,
       imageUrl: product.image_url || undefined,
+      orderCode: product.order_code || undefined,
     });
     return true;
   };

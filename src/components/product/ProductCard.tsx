@@ -13,6 +13,7 @@ interface ProductCardProps {
     image_url: string | null;
     short_description?: string | null;
     badge?: string | null;
+    order_code?: string | null;
     category?: { name: string; parentName?: string } | null;
     variants?: { id: string; name: string; price: number; original_price?: number | null; stock: number }[];
   };
@@ -49,6 +50,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       quantity: 1,
       stock: firstVariant.stock,
       imageUrl: product.image_url || undefined,
+      orderCode: product.order_code || undefined,
     });
     toast.success(`Đã thêm "${product.name}" vào giỏ!`);
   };

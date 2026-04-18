@@ -141,7 +141,14 @@ export default function CheckoutForm() {
                   {item.imageUrl && <img src={item.imageUrl} alt={item.productName} className="w-12 h-12 object-cover rounded-lg" />}
                   <div className="flex flex-col">
                     <span className="font-semibold text-text text-sm line-clamp-1">{item.productName}</span>
-                    <span className="text-xs text-gray-400">{item.variantName} x {item.quantity}</span>
+                    <span className="text-[11px] text-gray-500 mt-0.5">
+                      Phân loại: {item.variantName} x {item.quantity}
+                    </span>
+                    {item.orderCode && (
+                      <span className="text-[10px] font-mono text-primary bg-primary/5 px-1 py-0.5 mt-1 rounded w-max font-bold">
+                        MÃ SP: {item.orderCode}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <span className="font-bold text-cta text-sm">

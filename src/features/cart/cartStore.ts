@@ -10,6 +10,7 @@ export interface CartItem {
   imageUrl?: string;
   quantity: number;
   stock: number;
+  orderCode?: string;
 }
 
 interface CartState {

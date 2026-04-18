@@ -29,7 +29,7 @@ const TABS = [
 
 type Tab = typeof TABS[number]["key"];
 
-export default function SettingsTabs({ heroContent, seoContent, telegramContent, zaloContent, categoriesContent, navbarContent, footerContent, pagesContent }: Props) {
+export default function SettingsTabs({ heroContent, seoContent, telegramContent, zaloContent, categoriesContent, navbarContent, footerContent, pagesContent, productToolsContent }: Props) {
   const [active, setActive] = useState<Tab>("pages");
 
   return (

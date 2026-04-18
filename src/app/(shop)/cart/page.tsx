@@ -79,9 +79,16 @@ export default function CartPage() {
                          <h3 className="font-bold text-lg text-text hover:text-primary transition-colors line-clamp-2">
                            {item.productName}
                          </h3>
-                         <span className="text-sm bg-background border border-gray-100 px-3 py-1 rounded-full w-max text-gray-500 uppercase font-medium text-xs">
-                           Phân loại: {item.variantName}
-                         </span>
+                         <div className="flex flex-wrap gap-2 mt-1">
+                           <span className="bg-background border border-gray-100 px-3 py-1 rounded-full w-max text-gray-500 uppercase font-medium text-xs">
+                             Phân loại: {item.variantName}
+                           </span>
+                           {item.orderCode && (
+                             <span className="font-mono bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded text-[10px] font-bold tracking-wider">
+                               MÃ SP: {item.orderCode}
+                             </span>
+                           )}
+                         </div>
                          <span className="text-primary font-bold mt-2 md:hidden">
                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price)}
                          </span>
