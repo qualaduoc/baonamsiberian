@@ -58,9 +58,16 @@ export default function OrdersTable({ orders }: Props) {
     const w = window.open("", "_blank", "width=850,height=600");
     if (!w) return;
     const items = order.order_items.map((oi) => {
-      const name = oi.variant?.product?.name || "Sản phẩm";
-      const variant = oi.variant?.name || "";
-      return `<tr><td>${name} ${variant ? `<span class="dim">(${variant})</span>` : ""}</td><td class="center">${oi.quantity}</td></tr>`;
+      const name = oi.snapshot_product_name || oi.variant?.product?.name || "Sản phẩm";
+      const variant = oi.snapshot_variant_name || oi.variant?.name || "";
+      const priceFmt = formatVND(oi.price);
+      const totalFmt = formatVND(oi.price * oi.quantity);
+      return `<tr>
+        <td>${name} ${variant ? `<span class="dim">(${variant})</span>` : ""}</td>
+        <td class="center">x${oi.quantity}</td>
+        <td style="text-align:right; font-size:10px">${priceFmt}</td>
+        <td style="text-align:right; font-weight:bold">${totalFmt}</td>
+      </tr>`;
     }).join("");
     w.document.write(`<!DOCTYPE html><html><head><title>Phiếu Gửi Hàng #${order.id.substring(0,8)}</title>
 <style>
@@ -120,7 +127,17 @@ export default function OrdersTable({ orders }: Props) {
     </div>
   </div>
   <div class="items-title">Danh Sách Sản Phẩm</div>
-  <table><thead><tr><th>Sản phẩm</th><th class="center" style="width:70px">SL</th></tr></thead><tbody>${items}</tbody></table>
+  <table>
+    <thead>
+      <tr>
+        <th>Sản phẩm</th>
+        <th class="center" style="width:30px">SL</th>
+        <th style="text-align:right; width:70px">Đơn giá</th>
+        <th style="text-align:right; width:80px">Thành tiền</th>
+      </tr>
+    </thead>
+    <tbody>${items}</tbody>
+  </table>
   <div class="total-row">
     <span class="total-label">💰 Tổng thu COD:</span>
     <span class="total-value">${formatVND(order.total_amount)}</span>
