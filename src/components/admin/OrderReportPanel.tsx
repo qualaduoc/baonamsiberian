@@ -124,7 +124,7 @@ export default function OrderReportPanel({ orders }: Props) {
         period === "day" ? "Hôm nay" 
         : period === "week" ? "7 ngày qua" 
         : period === "month" ? "Tháng này" 
-        : \`Tháng \${selectedMonth.split('-')[1]}/\${selectedMonth.split('-')[0]}\`
+        : "Tháng " + selectedMonth.split('-')[1] + "/" + selectedMonth.split('-')[0]
       } · In lúc: ${new Date().toLocaleString("vi-VN")}</p>
       
       <div class="stats-grid">
