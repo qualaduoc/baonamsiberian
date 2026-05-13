@@ -8,26 +8,45 @@ interface Props {
   orders: OrderWithItems[];
 }
 
-type Period = "day" | "week" | "month";
+type Period = "day" | "week" | "month" | "custom_month";
 
 const fmtVND = (n: number) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(n);
 const fmtDate = (d: string) => new Date(d).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 export default function OrderReportPanel({ orders }: Props) {
-  const [period, setPeriod] = useState<Period>("week");
+  const [period, setPeriod] = useState<Period>("month");
   const [activeTab, setActiveTab] = useState<"revenue" | "products">("revenue");
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
   const reportRef = useRef<HTMLDivElement>(null);
 
   const now = new Date();
 
   const filteredOrders = useMemo(() => {
     const cutoff = new Date();
-    if (period === "day") cutoff.setHours(0, 0, 0, 0);
-    else if (period === "week") cutoff.setDate(cutoff.getDate() - 7);
-    else cutoff.setDate(1);
-
-    return orders.filter((o) => new Date(o.created_at) >= cutoff);
-  }, [orders, period]);
+    if (period === "day") {
+      cutoff.setHours(0, 0, 0, 0);
+      return orders.filter((o) => new Date(o.created_at) >= cutoff);
+    } else if (period === "week") {
+      cutoff.setDate(cutoff.getDate() - 7);
+      return orders.filter((o) => new Date(o.created_at) >= cutoff);
+    } else if (period === "month") {
+      cutoff.setDate(1);
+      cutoff.setHours(0, 0, 0, 0);
+      return orders.filter((o) => new Date(o.created_at) >= cutoff);
+    } else if (period === "custom_month" && selectedMonth) {
+      const [year, month] = selectedMonth.split('-');
+      const startOfMonth = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const endOfMonth = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59, 999);
+      return orders.filter((o) => {
+        const d = new Date(o.created_at);
+        return d >= startOfMonth && d <= endOfMonth;
+      });
+    }
+    return orders;
+  }, [orders, period, selectedMonth]);
 
   const completedOrders = filteredOrders.filter((o) => o.status === "completed");
 
@@ -101,7 +120,12 @@ export default function OrderReportPanel({ orders }: Props) {
         @media print{body{padding:20px}}
       </style></head><body>
       <h1>📊 Báo Cáo Doanh Thu - Bảo Nam Health</h1>
-      <p class="subtitle">Kỳ báo cáo: ${period === "day" ? "Hôm nay" : period === "week" ? "7 ngày qua" : "Tháng này"} · In lúc: ${new Date().toLocaleString("vi-VN")}</p>
+      <p class="subtitle">Kỳ báo cáo: ${
+        period === "day" ? "Hôm nay" 
+        : period === "week" ? "7 ngày qua" 
+        : period === "month" ? "Tháng này" 
+        : \`Tháng \${selectedMonth.split('-')[1]}/\${selectedMonth.split('-')[0]}\`
+      } · In lúc: ${new Date().toLocaleString("vi-VN")}</p>
       
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-value">${fmtVND(revenueStats.total)}</div><div class="stat-label">Tổng doanh thu</div></div>
@@ -129,7 +153,7 @@ export default function OrderReportPanel({ orders }: Props) {
     setTimeout(() => printWindow.print(), 300);
   };
 
-  const PERIOD_LABELS: Record<Period, string> = { day: "Hôm nay", week: "7 ngày", month: "Tháng này" };
+  const PERIOD_LABELS: Record<string, string> = { day: "Hôm nay", week: "7 ngày", month: "Tháng này" };
 
   return (
     <div ref={reportRef} className="space-y-6">
@@ -143,7 +167,7 @@ export default function OrderReportPanel({ orders }: Props) {
         <div className="flex items-center gap-3 flex-wrap">
           {/* Period selector */}
           <div className="flex bg-surface rounded-xl border border-outline-variant/15 overflow-hidden">
-            {(["day", "week", "month"] as Period[]).map((p) => (
+            {(["day", "week", "month"] as const).map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
@@ -152,6 +176,15 @@ export default function OrderReportPanel({ orders }: Props) {
                 {PERIOD_LABELS[p]}
               </button>
             ))}
+            <input 
+              type="month" 
+              value={selectedMonth}
+              onChange={(e) => {
+                setSelectedMonth(e.target.value);
+                setPeriod("custom_month");
+              }}
+              className={`px-4 py-2 text-sm font-bold transition-all cursor-pointer outline-none ${period === "custom_month" ? "bg-primary text-white" : "bg-transparent text-on-surface-variant hover:bg-primary/5"}`}
+            />
           </div>
           {/* Tab selector */}
           <div className="flex bg-surface rounded-xl border border-outline-variant/15 overflow-hidden">
